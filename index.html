@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pooly.AI — Live Demo</title>
+  <!-- OG / Social -->
+  <meta name="description" content="Watch an AI agent pay autonomously — no human in the loop. Pooly.AI: payments built for agents, not humans." />
+  <meta property="og:title" content="Pooly.AI — Payments built for agents, not humans." />
+  <meta property="og:description" content="Watch an AI agent hit HTTP 402, pay in USDC, and get verified by a merchant — all in under 1 second. Zero humans involved." />
+  <meta property="og:url" content="https://demo.pooly.ai" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pooly.AI — Payments built for agents, not humans." />
+  <meta name="twitter:description" content="Watch an AI agent pay autonomously — no human in the loop. Try the live demo." />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a24;
+      --border: #2a2a3a;
+      --border2: #3a3a4a;
+      --text: #e8e8f0;
+      --text2: #9090a8;
+      --text3: #5a5a72;
+      --accent: #6c6cff;
+      --accent2: #4a4aee;
+      --green: #22c55e;
+      --green-dim: #166534;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --teal: #06b6d4;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
+
+    /* Layout */
+    .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .logo { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .badge { font-size: 10px; font-family: var(--mono); background: rgba(108,108,255,0.12); border: 1px solid rgba(108,108,255,0.3); color: var(--accent); padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent2); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+    .btn-success { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); cursor: default; }
+
+    /* Progress Steps */
+    .steps { display: flex; align-items: center; padding: 0 24px; height: 52px; border-bottom: 1px solid var(--border); background: var(--bg); flex-shrink: 0; gap: 0; overflow-x: auto; }
+    .step { display: flex; align-items: center; gap: 8px; padding: 0 16px 0 0; white-space: nowrap; }
+    .step:first-child { padding-left: 0; }
+    .step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; font-family: var(--mono); border: 1.5px solid var(--border2); color: var(--text3); transition: all 0.3s; flex-shrink: 0; }
+    .step-label { font-size: 12px; color: var(--text3); transition: color 0.3s; }
+    .step.active .step-num { border-color: var(--accent); color: var(--accent); background: rgba(108,108,255,0.12); }
+    .step.active .step-label { color: var(--text); }
+    .step.done .step-num { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.1); }
+    .step.done .step-label { color: var(--text2); }
+    .step-arrow { color: var(--border2); font-size: 12px; padding-right: 16px; }
+
+    /* Main content */
+    .main { flex: 1; display: flex; overflow: hidden; }
+    .panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .panel-agent { border-right: 1px solid var(--border); }
+    .panel-merchant { background: var(--bg); }
+    .panel-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; font-family: var(--mono); }
+
+    /* Cards */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.3s; }
+    .card.highlight { border-color: rgba(108,108,255,0.4); }
+    .card.success { border-color: rgba(34,197,94,0.4); }
+    .card-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-title svg { width: 14px; height: 14px; }
+
+    /* Wallet Card */
+    .wallet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .agent-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); transition: background 0.3s; }
+    .status-dot.idle { background: var(--text3); }
+    .status-dot.active { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse 1s infinite; }
+    .status-dot.done { background: var(--green); box-shadow: 0 0 6px var(--green); animation: none; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .wallet-field { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+    .wallet-field-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; font-family: var(--mono); }
+    .wallet-field-value { font-size: 13px; font-family: var(--mono); color: var(--text); }
+    .wallet-field-value.green { color: var(--green); }
+    .wallet-field-value.mono { font-size: 11px; color: var(--text2); }
+    .wallet-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text3); font-family: var(--mono); margin-top: 10px; }
+
+    /* Spend Policy Section */
+    .policy-section { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
+    .policy-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-family: var(--mono); margin-bottom: 8px; }
+    .policy-label svg { color: var(--accent); opacity: 0.8; }
+    .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .policy-field { background: rgba(108,108,255,0.05); border: 1px solid rgba(108,108,255,0.15); border-radius: 6px; padding: 8px 12px; }
+    .policy-field-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; font-family: var(--mono); }
+    .policy-field-value { font-size: 13px; font-family: var(--mono); color: var(--text); }
+    .policy-approval { display: flex; align-items: center; justify-content: space-between; background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.15); border-radius: 6px; padding: 8px 12px; font-size: 12px; }
+    .policy-approval-label { color: var(--text3); font-family: var(--mono); }
+    .policy-approval-value { color: var(--green); font-family: var(--mono); font-weight: 600; font-size: 11px; }
+
+    /* Developer Notification Card */
+    .dev-notify { border-color: rgba(108,108,255,0.3) !important; background: rgba(108,108,255,0.04) !important; opacity: 0; transform: translateY(8px); transition: opacity 0.4s, transform 0.4s; }
+    .dev-notify.visible { opacity: 1; transform: translateY(0); }
+    .dev-notify-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .dev-notify-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(108,108,255,0.15); border: 1px solid rgba(108,108,255,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dev-notify-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .dev-notify-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .dev-notify-body { font-size: 12px; color: var(--text2); line-height: 1.6; font-family: var(--mono); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+    .dev-notify-footer { font-size: 11px; color: var(--accent); opacity: 0.8; }
+
+    /* Log Terminal */
+    .log-terminal { background: #080810; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: var(--mono); font-size: 12px; line-height: 1.8; min-height: 180px; position: relative; overflow: hidden; }
+    .log-empty { color: var(--text3); font-style: italic; }
+    .log-line { opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s; }
+    .log-line.visible { opacity: 1; transform: translateY(0); }
+    .log-line.req { color: var(--teal); }
+    .log-line.res-err { color: var(--red); }
+    .log-line.info { color: var(--text2); padding-left: 16px; }
+    .log-line.check { color: var(--green); }
+    .log-line.action { color: var(--accent); }
+    .log-line.res-ok { color: var(--green); font-weight: 600; }
+    .log-line.blank { height: 6px; }
+    .cursor { display: inline-block; width: 7px; height: 13px; background: var(--accent); animation: blink 1s infinite; vertical-align: middle; margin-left: 2px; border-radius: 1px; }
+    @keyframes blink { 0%,49% {opacity:1;} 50%,100% {opacity:0;} }
+
+    /* Transaction Card */
+    .tx-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-family: var(--mono); font-size: 12px; opacity: 0; transform: translateY(8px); transition: opacity 0.4s, transform 0.4s; }
+    .tx-card.visible { opacity: 1; transform: translateY(0); }
+    .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .tx-row:last-child { border-bottom: none; }
+    .tx-key { color: var(--text3); }
+    .tx-val { color: var(--text); }
+    .tx-val.green { color: var(--green); }
+    .tx-val.accent { color: var(--accent); }
+
+    /* Verification Checklist */
+    .checklist { display: flex; flex-direction: column; gap: 8px; }
+    .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; opacity: 0; transform: translateX(-8px); transition: opacity 0.3s, transform 0.3s, border-color 0.3s; }
+    .check-item.visible { opacity: 1; transform: translateX(0); }
+    .check-item.visible.ok { border-color: rgba(34,197,94,0.3); }
+    .check-icon { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.3s; }
+    .check-icon.ok { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+    .check-text { flex: 1; }
+    .check-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+    /* CRM Card */
+    .crm-card { opacity: 0; transform: translateY(8px); transition: opacity 0.4s, transform 0.4s; }
+    .crm-card.visible { opacity: 1; transform: translateY(0); }
+    .crm-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .crm-logo { background: #ff7a59; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.3px; }
+    .crm-event { font-size: 12px; color: var(--green); font-weight: 600; }
+    .crm-field { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .crm-field:last-child { border-bottom: none; }
+    .crm-key { color: var(--text3); }
+    .crm-val { color: var(--text); font-family: var(--mono); }
+    .crm-val.green { color: var(--green); }
+    .sim-badge { display: inline-block; font-size: 10px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); color: var(--yellow); padding: 1px 6px; border-radius: 3px; margin-left: 8px; }
+
+    /* Idle Placeholder */
+    .idle-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 8px; color: var(--text3); text-align: center; padding: 40px; }
+    .idle-icon { font-size: 32px; opacity: 0.3; }
+    .idle-text { font-size: 13px; }
+
+    /* Summary bar */
+    .summary-bar { display: none; align-items: center; justify-content: center; gap: 32px; padding: 12px 24px; background: rgba(34,197,94,0.06); border-top: 1px solid rgba(34,197,94,0.2); flex-shrink: 0; }
+    .summary-bar.visible { display: flex; }
+    .summary-stat { text-align: center; }
+    .summary-val { font-size: 18px; font-weight: 700; font-family: var(--mono); color: var(--green); }
+    .summary-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* CTA Banner */
+    .cta-bar { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 20px 24px; background: linear-gradient(135deg, rgba(108,108,255,0.08) 0%, rgba(108,108,255,0.03) 100%); border-top: 1px solid rgba(108,108,255,0.25); flex-shrink: 0; text-align: center; }
+    .cta-bar.visible { display: flex; }
+    .cta-heading { font-size: 15px; font-weight: 600; color: var(--text); }
+    .cta-sub { font-size: 12px; color: var(--text2); }
+    .cta-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn-cta { background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 22px; border-radius: 6px; border: none; cursor: pointer; transition: background 0.15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-cta:hover { background: var(--accent2); }
+    .btn-share { background: transparent; border: 1px solid var(--border2); color: var(--text2); font-size: 12px; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-share:hover { border-color: var(--accent); color: var(--text); }
+    .copied-hint { font-size: 11px; color: var(--green); opacity: 0; transition: opacity 0.3s; }
+    .copied-hint.show { opacity: 1; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* Tab bar (mobile only) */
+    .tab-bar { display: none; }
+
+    /* ── Mobile ─────────────────────────────── */
+    @media (max-width: 768px) {
+      html, body { height: auto; }
+      .app { height: auto; min-height: 100vh; overflow: visible; }
+
+      /* Header */
+      .header { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+      .sim-note { display: none; }
+      .logo { font-size: 15px; }
+      .btn { padding: 8px 14px; min-height: 40px; }
+
+      /* Steps: numbers only */
+      .steps { padding: 0 12px; height: 38px; }
+      .step { padding: 0 6px 0 0; }
+      .step-label { display: none; }
+      .step-arrow { padding-right: 6px; font-size: 10px; }
+      .step-num { width: 26px; height: 26px; font-size: 11px; }
+
+      /* Tab bar */
+      .tab-bar {
+        display: flex;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg2);
+      }
+      .tab-btn {
+        flex: 1; padding: 11px 8px; text-align: center;
+        font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+        cursor: pointer; border: none; background: transparent;
+        color: var(--text3); border-bottom: 2px solid transparent;
+        transition: color 0.2s, border-color 0.2s;
+        font-family: var(--sans);
+      }
+      .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+      .tab-btn .tab-dot {
+        display: inline-block; width: 6px; height: 6px;
+        border-radius: 50%; background: var(--text3);
+        margin-right: 6px; vertical-align: middle;
+        transition: background 0.3s;
+      }
+      .tab-btn.active .tab-dot { background: var(--accent); }
+      .tab-btn.merchant-ready .tab-dot { background: var(--yellow); animation: pulse 1s infinite; }
+      .tab-btn.merchant-done .tab-dot { background: var(--green); animation: none; }
+
+      /* Panels: tab-driven visibility */
+      .main { flex-direction: column; overflow: visible; }
+      .panel { flex: none; display: none; overflow: visible; padding: 12px; }
+      .panel.tab-active { display: flex; }
+      .panel-agent { border-right: none; }
+
+      /* Wallet grid — full width on narrow */
+      .wallet-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .wallet-field { padding: 8px 10px; }
+
+      /* Log terminal — allow x-scroll for long lines */
+      .log-terminal { font-size: 11px; overflow-x: auto; min-height: 140px; }
+      .log-line { white-space: nowrap; }
+
+      /* TX rows — stack on very narrow */
+      .tx-row { flex-wrap: wrap; gap: 2px; }
+
+      /* Idle placeholder */
+      .idle-placeholder { padding: 24px; }
+
+      /* Summary bar */
+      .summary-bar {
+        flex-wrap: wrap; gap: 10px 0;
+        padding: 12px 16px; justify-content: space-around;
+      }
+      .summary-stat { min-width: calc(33% - 8px); }
+      .summary-val { font-size: 15px; }
+
+      /* CTA bar */
+      .cta-bar { padding: 16px; gap: 8px; }
+      .cta-heading { font-size: 14px; }
+      .cta-actions { gap: 8px; }
+      .btn-cta { width: 100%; justify-content: center; }
+    }
+
+    @media (max-width: 380px) {
+      .wallet-grid { grid-template-columns: 1fr; }
+      .header-right .badge { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">Pooly<span>.</span>AI</div>
+      <div class="badge">Interactive Demo</div>
+    </div>
+    <div class="header-right">
+      <span class="sim-note" style="font-size:11px;color:var(--text3);font-family:var(--mono)">Simulated — no real blockchain calls</span>
+      <button class="btn btn-ghost" id="resetBtn" onclick="resetDemo()" style="display:none">↺ Reset</button>
+      <button class="btn btn-primary" id="runBtn" onclick="runDemo()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2l7 4-7 4V2z"/></svg>
+        Run Demo
+      </button>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-label">Agent Wallet</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-label">HTTP 402 Hit</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-label">Pooly Intercepts</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step" id="step4">
+      <div class="step-num">4</div>
+      <div class="step-label">Payment Settles</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step" id="step5">
+      <div class="step-num">5</div>
+      <div class="step-label">Agent Verified</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step" id="step6">
+      <div class="step-num">6</div>
+      <div class="step-label">CRM Record</div>
+    </div>
+  </div>
+
+  <!-- Tab bar (mobile only) -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabAgent" onclick="switchTab('agent')">
+      <span class="tab-dot"></span>Agent Side
+    </button>
+    <button class="tab-btn" id="tabMerchant" onclick="switchTab('merchant')">
+      <span class="tab-dot"></span>Merchant Side
+    </button>
+  </div>
+
+  <!-- Main panels -->
+  <div class="main">
+
+    <!-- Agent Side -->
+    <div class="panel panel-agent tab-active" id="panelAgent">
+      <div class="panel-label">
+        <svg style="display:inline;vertical-align:middle;margin-right:4px" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Developer View — developer@acme.com
+      </div>
+
+      <!-- Wallet Card -->
+      <div class="card" id="walletCard">
+        <div class="card-title" style="justify-content:space-between">
+          <span style="display:flex;align-items:center;gap:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/><circle cx="16" cy="14" r="2" fill="currentColor" stroke="none"/></svg>
+            Agent Wallet
+          </span>
+          <span style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--mono);text-transform:none;letter-spacing:0">funded by you</span>
+        </div>
+        <div class="wallet-header">
+          <div class="agent-name">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h.01M15 9h.01M9 14s1 2 3 2 3-2 3-2"/></svg>
+            ResearchAgent-7
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
+            <div class="status-dot idle" id="statusDot"></div>
+            <span id="statusText">Idle</span>
+          </div>
+        </div>
+        <div class="wallet-grid">
+          <div class="wallet-field">
+            <div class="wallet-field-label">Wallet</div>
+            <div class="wallet-field-value mono">0x4f3a…d291</div>
+          </div>
+          <div class="wallet-field">
+            <div class="wallet-field-label">Balance</div>
+            <div class="wallet-field-value green" id="balance">$12.400 USDC</div>
+          </div>
+        </div>
+
+        <!-- Spend Policy — developer-configured rules -->
+        <div class="policy-section">
+          <div class="policy-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Your Spend Policy
+          </div>
+          <div class="policy-grid">
+            <div class="policy-field">
+              <div class="policy-field-label">Daily Limit</div>
+              <div class="policy-field-value">$5.00 / day</div>
+            </div>
+            <div class="policy-field">
+              <div class="policy-field-label">Per-Merchant Cap</div>
+              <div class="policy-field-value">$2.00 / tx</div>
+            </div>
+          </div>
+          <div class="policy-approval">
+            <span class="policy-approval-label">Human approval required</span>
+            <span class="policy-approval-value">None — agent runs autonomously</span>
+          </div>
+        </div>
+
+        <div class="wallet-status">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span id="walletStatus">Waiting for task…</span>
+        </div>
+      </div>
+
+      <!-- Log Terminal -->
+      <div class="card" id="logCard">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Payment Execution Log
+        </div>
+        <div class="log-terminal" id="logTerminal">
+          <div class="log-empty" id="logEmpty">Waiting for agent to execute task…</div>
+          <div id="logLines"></div>
+          <span class="cursor" id="logCursor" style="display:none"></span>
+        </div>
+      </div>
+
+      <!-- Transaction Card -->
+      <div class="card" id="txCardWrap" style="display:none">
+        <div class="card-title" style="color:var(--green)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Transaction Settled
+        </div>
+        <div class="tx-card visible" id="txCard">
+          <div class="tx-row"><span class="tx-key">Txn ID</span><span class="tx-val accent">TXN-8842</span></div>
+          <div class="tx-row"><span class="tx-key">Amount</span><span class="tx-val green">0.001 USDC</span></div>
+          <div class="tx-row"><span class="tx-key">From</span><span class="tx-val">ResearchAgent-7</span></div>
+          <div class="tx-row"><span class="tx-key">To</span><span class="tx-val">Firecrawl API</span></div>
+          <div class="tx-row"><span class="tx-key">Network</span><span class="tx-val">Base — Block #12,847,991</span></div>
+          <div class="tx-row"><span class="tx-key">Latency</span><span class="tx-val">0.8s</span></div>
+          <div class="tx-row"><span class="tx-key">New Balance</span><span class="tx-val green" id="newBalance">$12.399 USDC</span></div>
+        </div>
+      </div>
+
+      <!-- Developer Notification — you were never asked -->
+      <div class="card dev-notify" id="devNotifyCard" style="display:none">
+        <div class="dev-notify-header">
+          <div class="dev-notify-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </div>
+          <div>
+            <div class="dev-notify-title">Your agent completed its task</div>
+            <div class="dev-notify-sub">You were never asked to approve</div>
+          </div>
+        </div>
+        <div class="dev-notify-body">
+ResearchAgent-7  →  GET /v1/scrape on Firecrawl
+$0.001 USDC spent  ·  within your $5.00 daily limit
+TXN-8842  ·  0.8s  ·  policy enforced automatically
+        </div>
+        <div class="dev-notify-footer">
+          Fund once. Set your rules. Your agent handles the rest. →
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Merchant Side -->
+    <div class="panel panel-merchant" id="panelMerchant">
+      <div class="panel-label">
+        <svg style="display:inline;vertical-align:middle;margin-right:4px" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Merchant Side — ICP-B: Firecrawl API
+      </div>
+
+      <!-- Idle state -->
+      <div class="idle-placeholder" id="merchantIdle">
+        <div class="idle-icon">🏪</div>
+        <div class="idle-text">Merchant dashboard activates after agent payment</div>
+      </div>
+
+      <!-- Incoming Request -->
+      <div class="card" id="incomingCard" style="display:none">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.61 19.79 19.79 0 01.1 1.1 2 2 0 012.08.9h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.05a16 16 0 006.04 6.04l1.42-1.42a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Incoming Agent Request
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;font-family:var(--mono)">
+          <div style="color:var(--text3)">Agent</div><div style="color:var(--text)">ResearchAgent-7</div>
+          <div style="color:var(--text3)">Operator</div><div style="color:var(--text)">developer@acme.com</div>
+          <div style="color:var(--text3)">Protocol</div><div style="color:var(--accent)">x402 / ERC-8004</div>
+          <div style="color:var(--text3)">Endpoint</div><div style="color:var(--text)">GET /v1/scrape</div>
+          <div style="color:var(--text3)">Amount</div><div style="color:var(--green)">0.001 USDC</div>
+        </div>
+      </div>
+
+      <!-- Verification Checklist -->
+      <div class="card" id="verifyCard" style="display:none">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Agent Identity Verification
+        </div>
+        <div class="checklist" id="checklist">
+          <div class="check-item" id="c1">
+            <div class="check-icon" id="ci1">·</div>
+            <div class="check-text">ERC-8004 identity resolved</div>
+            <div class="check-meta" id="cm1"></div>
+          </div>
+          <div class="check-item" id="c2">
+            <div class="check-icon" id="ci2">·</div>
+            <div class="check-text">Reputation score</div>
+            <div class="check-meta" id="cm2"></div>
+          </div>
+          <div class="check-item" id="c3">
+            <div class="check-icon" id="ci3">·</div>
+            <div class="check-text">Spend pattern analysis</div>
+            <div class="check-meta" id="cm3"></div>
+          </div>
+          <div class="check-item" id="c4">
+            <div class="check-icon" id="ci4">·</div>
+            <div class="check-text">Wallet balance check</div>
+            <div class="check-meta" id="cm4"></div>
+          </div>
+          <div class="check-item" id="c5">
+            <div class="check-icon" id="ci5">·</div>
+            <div class="check-text">Blacklist / fraud check</div>
+            <div class="check-meta" id="cm5"></div>
+          </div>
+        </div>
+        <div id="verifyResult" style="margin-top:12px;display:none;padding:10px 12px;border-radius:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);font-size:13px;font-weight:600;color:var(--green)">
+          ✅ Agent verified — payment accepted
+        </div>
+      </div>
+
+      <!-- CRM Record -->
+      <div class="card crm-card" id="crmCard" style="display:none">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+          CRM Record — Auto-Created
+        </div>
+        <div class="crm-header">
+          <div class="crm-logo">HubSpot</div>
+          <div class="crm-event">✦ Deal Created</div>
+          <div class="sim-badge">simulated</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px">
+          <div class="crm-field"><span class="crm-key">Contact</span><span class="crm-val">ResearchAgent-7 (acme.com)</span></div>
+          <div class="crm-field"><span class="crm-key">Amount</span><span class="crm-val green">$0.001 USDC</span></div>
+          <div class="crm-field"><span class="crm-key">Deal Stage</span><span class="crm-val">Closed Won</span></div>
+          <div class="crm-field"><span class="crm-key">Source</span><span class="crm-val">Pooly Agent Payment</span></div>
+          <div class="crm-field"><span class="crm-key">Txn ID</span><span class="crm-val">TXN-8842</span></div>
+          <div class="crm-field"><span class="crm-key">Auto-created</span><span class="crm-val green">✓</span></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.5">
+          Payment data routed into HubSpot via Pooly CRM connector. Supports Salesforce, SAP, NetSuite.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Summary Bar -->
+  <div class="summary-bar" id="summaryBar">
+    <div class="summary-stat"><div class="summary-val">0.001 USDC</div><div class="summary-label">Amount Settled</div></div>
+    <div class="summary-stat"><div class="summary-val">0.8s</div><div class="summary-label">Total Latency</div></div>
+    <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">Humans Involved</div></div>
+    <div class="summary-stat"><div class="summary-val">✓</div><div class="summary-label">Agent Verified</div></div>
+    <div class="summary-stat"><div class="summary-val">✓</div><div class="summary-label">CRM Record Created</div></div>
+    <button class="btn btn-ghost" onclick="resetDemo()" style="margin-left:8px;font-size:12px">↺ Run again</button>
+  </div>
+
+  <!-- CTA Banner — appears after demo completes -->
+  <div class="cta-bar" id="ctaBar">
+    <div class="cta-heading">This is what autonomous payments look like.</div>
+    <div class="cta-sub">Get early access — we're onboarding agent builders and merchants now.</div>
+    <div class="cta-actions">
+      <a class="btn-cta" href="https://pooly.ai/waitlist" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Join the Waitlist
+      </a>
+      <button class="btn-share" onclick="copyDemoLink()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        Copy demo link
+      </button>
+      <button class="btn btn-ghost" onclick="resetDemo()" style="font-size:12px">↺ Run again</button>
+    </div>
+    <div class="copied-hint" id="copiedHint">Link copied to clipboard ✓</div>
+  </div>
+
+</div>
+
+<script>
+  // Log sequence — each entry: [delay_ms, class, text]
+  const LOG_SEQUENCE = [
+    [0,    'req',    '→ GET https://api.firecrawl.dev/v1/scrape'],
+    [900,  'blank',  ''],
+    [900,  'res-err','← HTTP 402 Payment Required'],
+    [1100, 'info',   '  X-Payment-Required: USDC 0.001 on Base'],
+    [1300, 'info',   '  X-Payment-Address: 0x9b2c…8f41'],
+    [1300, 'info',   '  X-Payment-Protocol: EIP-3009 transferWithAuthorization'],
+    [1600, 'blank',  ''],
+    [1600, 'action', '⚡ Pooly intercepting — checking developer policy…'],
+    [2000, 'check',  '✓ Daily limit: $0.001 of $5.00 used  (developer@acme.com)'],
+    [2300, 'check',  '✓ Merchant cap: $0.001 within $2.00 per-tx rule'],
+    [2500, 'check',  '✓ No human approval required — agent authorized'],
+    [2800, 'check',  '✓ Signing EIP-3009 authorization…'],
+    [3000, 'blank',  ''],
+    [3000, 'req',    '→ POST https://api.firecrawl.dev/v1/scrape'],
+    [3000, 'info',   '  Authorization: Bearer eyJhbGciOiJFUzI1…'],
+    [3000, 'info',   '  X-Payment-Proof: 0x7f3a4b…c291'],
+    [3800, 'blank',  ''],
+    [3800, 'res-ok', '← HTTP 200 OK  ✅  Scrape complete. 0.8s total.'],
+  ];
+
+  // Checklist items: [delay_after_merchant_start, icon, meta]
+  const CHECKS = [
+    [300,  '✓', 'resolved'],
+    [700,  '✓', '94 / 100 · 847 prior txns'],
+    [1100, '✓', 'normal — no anomalies'],
+    [1500, '✓', '$12.40 USDC — sufficient'],
+    [1900, '✓', 'clear'],
+  ];
+
+  let running = false;
+  let activeTab = 'agent';
+
+  function isMobile() { return window.innerWidth <= 768; }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('panelAgent').classList.toggle('tab-active', tab === 'agent');
+    document.getElementById('panelMerchant').classList.toggle('tab-active', tab === 'merchant');
+    document.getElementById('tabAgent').classList.toggle('active', tab === 'agent');
+    document.getElementById('tabMerchant').classList.toggle('active', tab === 'merchant');
+  }
+
+  function setStep(n, state) {
+    const el = document.getElementById('step' + n);
+    if (!el) return;
+    el.className = 'step ' + state;
+  }
+
+  function runDemo() {
+    if (running) return;
+    running = true;
+
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('resetBtn').style.display = 'flex';
+
+    // Step 1 active
+    setStep(1, 'active');
+
+    const dot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    dot.className = 'status-dot active';
+    statusText.textContent = 'Running task…';
+    document.getElementById('walletStatus').textContent = 'Executing: GET /v1/scrape on Firecrawl…';
+
+    // Show log cursor
+    document.getElementById('logEmpty').style.display = 'none';
+    document.getElementById('logCursor').style.display = 'inline-block';
+
+    // Schedule log lines
+    LOG_SEQUENCE.forEach(([delay, cls, text], i) => {
+      setTimeout(() => {
+        if (cls === 'blank') {
+          addLogLine('blank', '');
+          return;
+        }
+        addLogLine(cls, text);
+
+        // Step transitions
+        if (text.includes('HTTP 402')) {
+          setStep(1, 'done'); setStep(2, 'active');
+        }
+        if (text.includes('Pooly intercepting')) {
+          setStep(2, 'done'); setStep(3, 'active');
+        }
+        if (text.includes('HTTP 200')) {
+          setStep(3, 'done'); setStep(4, 'active');
+          setTimeout(() => showTransaction(), 500);
+          setTimeout(() => startMerchantFlow(), 1200);
+        }
+      }, delay);
+    });
+  }
+
+  function addLogLine(cls, text) {
+    const container = document.getElementById('logLines');
+    const line = document.createElement('div');
+    line.className = 'log-line ' + cls;
+    line.textContent = text;
+    container.appendChild(line);
+    // Force reflow for transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { line.classList.add('visible'); });
+    });
+    // Scroll terminal
+    const term = document.getElementById('logTerminal');
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function showTransaction() {
+    document.getElementById('logCursor').style.display = 'none';
+    const wrap = document.getElementById('txCardWrap');
+    wrap.style.display = 'block';
+    setStep(4, 'done');
+
+    // Update wallet balance
+    document.getElementById('balance').textContent = '$12.399 USDC';
+    const dot = document.getElementById('statusDot');
+    dot.className = 'status-dot done';
+    document.getElementById('statusText').textContent = 'Task complete';
+    document.getElementById('walletStatus').textContent = 'Payment settled — TXN-8842';
+
+    // Show developer notification — you were never asked
+    setTimeout(() => {
+      const notify = document.getElementById('devNotifyCard');
+      notify.style.display = 'block';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { notify.classList.add('visible'); });
+      });
+    }, 800);
+  }
+
+  function startMerchantFlow() {
+    setStep(5, 'active');
+
+    // On mobile: signal tab and auto-switch after brief delay
+    const tabM = document.getElementById('tabMerchant');
+    tabM.classList.add('merchant-ready');
+    if (isMobile()) {
+      setTimeout(() => switchTab('merchant'), 400);
+    }
+
+    // Show merchant incoming request
+    document.getElementById('merchantIdle').style.display = 'none';
+    const incoming = document.getElementById('incomingCard');
+    incoming.style.display = 'block';
+
+    setTimeout(() => {
+      // Show verification card
+      const vc = document.getElementById('verifyCard');
+      vc.style.display = 'block';
+
+      CHECKS.forEach(([delay, icon, meta], i) => {
+        setTimeout(() => {
+          const item = document.getElementById('c' + (i+1));
+          const iconEl = document.getElementById('ci' + (i+1));
+          const metaEl = document.getElementById('cm' + (i+1));
+          item.classList.add('visible', 'ok');
+          iconEl.className = 'check-icon ok';
+          iconEl.textContent = icon;
+          metaEl.textContent = meta;
+
+          if (i === 4) {
+            // All checks done
+            document.getElementById('tabMerchant').classList.remove('merchant-ready');
+            document.getElementById('tabMerchant').classList.add('merchant-done');
+            setStep(5, 'done'); setStep(6, 'active');
+            setTimeout(() => {
+              document.getElementById('verifyResult').style.display = 'block';
+              setTimeout(() => showCRM(), 600);
+            }, 300);
+          }
+        }, delay);
+      });
+    }, 600);
+  }
+
+  function showCRM() {
+    const crm = document.getElementById('crmCard');
+    crm.style.display = 'block';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { crm.classList.add('visible'); });
+    });
+    setStep(6, 'done');
+    setTimeout(() => {
+      document.getElementById('summaryBar').classList.add('visible');
+      setTimeout(() => {
+        document.getElementById('ctaBar').classList.add('visible');
+      }, 400);
+    }, 600);
+  }
+
+  function copyDemoLink() {
+    const url = window.location.href.split('?')[0];
+    navigator.clipboard.writeText(url).then(() => {
+      const hint = document.getElementById('copiedHint');
+      hint.classList.add('show');
+      setTimeout(() => hint.classList.remove('show'), 2500);
+    }).catch(() => {
+      // Fallback for browsers without clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const hint = document.getElementById('copiedHint');
+      hint.classList.add('show');
+      setTimeout(() => hint.classList.remove('show'), 2500);
+    });
+  }
+
+  function resetDemo() {
+    running = false;
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('resetBtn').style.display = 'none';
+
+    // Reset tabs
+    switchTab('agent');
+    const tabM = document.getElementById('tabMerchant');
+    tabM.classList.remove('merchant-ready', 'merchant-done');
+
+    // Reset steps
+    for (let i = 1; i <= 6; i++) setStep(i, '');
+
+    // Reset wallet
+    document.getElementById('balance').textContent = '$12.400 USDC';
+    document.getElementById('statusDot').className = 'status-dot idle';
+    document.getElementById('statusText').textContent = 'Idle';
+    document.getElementById('walletStatus').textContent = 'Waiting for task…';
+
+    // Reset log
+    document.getElementById('logLines').innerHTML = '';
+    document.getElementById('logEmpty').style.display = 'block';
+    document.getElementById('logCursor').style.display = 'none';
+
+    // Reset tx card + dev notification
+    document.getElementById('txCardWrap').style.display = 'none';
+    const notify = document.getElementById('devNotifyCard');
+    notify.style.display = 'none';
+    notify.classList.remove('visible');
+
+    // Reset merchant
+    document.getElementById('merchantIdle').style.display = 'flex';
+    document.getElementById('incomingCard').style.display = 'none';
+    document.getElementById('verifyCard').style.display = 'none';
+    document.getElementById('crmCard').style.display = 'none';
+    document.getElementById('crmCard').classList.remove('visible');
+    document.getElementById('verifyResult').style.display = 'none';
+
+    // Reset checklist items
+    for (let i = 1; i <= 5; i++) {
+      const item = document.getElementById('c' + i);
+      item.classList.remove('visible', 'ok');
+      document.getElementById('ci' + i).className = 'check-icon';
+      document.getElementById('ci' + i).textContent = '·';
+      document.getElementById('cm' + i).textContent = '';
+    }
+
+    // Reset summary + CTA
+    document.getElementById('summaryBar').classList.remove('visible');
+    document.getElementById('ctaBar').classList.remove('visible');
+    document.getElementById('copiedHint').classList.remove('show');
+  }
+</script>
+</body>
+</html>
