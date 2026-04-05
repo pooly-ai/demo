@@ -4,16 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pooly.AI — Live Demo</title>
-  <!-- OG / Social -->
   <meta name="description" content="Watch an AI agent pay autonomously — no human in the loop. Pooly.AI: payments built for agents, not humans." />
   <meta property="og:title" content="Pooly.AI — Payments built for agents, not humans." />
-  <meta property="og:description" content="Watch an AI agent hit HTTP 402, pay in USDC, and get verified by a merchant — all in under 1 second. Zero humans involved." />
+  <meta property="og:description" content="Watch an AI agent initialize a wallet, hit HTTP 402, buy data, fund escrow — and a merchant verify identity, get paid, and auto-update HubSpot + ERP. Zero humans." />
   <meta property="og:url" content="https://demo.pooly.ai" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Pooly.AI — Payments built for agents, not humans." />
-  <meta name="twitter:description" content="Watch an AI agent pay autonomously — no human in the loop. Try the live demo." />
-  <!-- Fonts -->
+  <meta name="twitter:description" content="5 scenarios: wallet setup, HTTP 402 auto-pay, data purchase, task escrow, merchant verification. Try the live demo." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -22,6 +20,7 @@
       --bg: #0a0a0f;
       --bg2: #111118;
       --bg3: #1a1a24;
+      --bg4: #0d0d16;
       --border: #2a2a3a;
       --border2: #3a3a4a;
       --text: #e8e8f0;
@@ -34,832 +33,1550 @@
       --yellow: #eab308;
       --red: #ef4444;
       --teal: #06b6d4;
-      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --purple: #a855f7;
+      --orange: #f97316;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
       --sans: 'Inter', system-ui, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
-
-    /* Layout */
     .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
-    .header-left { display: flex; align-items: center; gap: 16px; }
-    .logo { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+
+    /* ── Header ─────────────────────────────── */
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; gap: 12px; }
+    .logo { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
     .logo span { color: var(--accent); }
-    .badge { font-size: 10px; font-family: var(--mono); background: rgba(108,108,255,0.12); border: 1px solid rgba(108,108,255,0.3); color: var(--accent); padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .badge { font-size: 10px; font-family: var(--mono); background: rgba(108,108,255,0.12); border: 1px solid rgba(108,108,255,0.3); color: var(--accent); padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+    .sim-note { font-size: 11px; color: var(--text3); font-family: var(--mono); white-space: nowrap; }
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--sans); white-space: nowrap; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover:not(:disabled) { background: var(--accent2); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
     .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
-    .btn-success { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); cursor: default; }
+    .header-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
 
-    /* Progress Steps */
-    .steps { display: flex; align-items: center; padding: 0 24px; height: 52px; border-bottom: 1px solid var(--border); background: var(--bg); flex-shrink: 0; gap: 0; overflow-x: auto; }
-    .step { display: flex; align-items: center; gap: 8px; padding: 0 16px 0 0; white-space: nowrap; }
-    .step:first-child { padding-left: 0; }
-    .step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; font-family: var(--mono); border: 1.5px solid var(--border2); color: var(--text3); transition: all 0.3s; flex-shrink: 0; }
-    .step-label { font-size: 12px; color: var(--text3); transition: color 0.3s; }
-    .step.active .step-num { border-color: var(--accent); color: var(--accent); background: rgba(108,108,255,0.12); }
-    .step.active .step-label { color: var(--text); }
-    .step.done .step-num { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.1); }
-    .step.done .step-label { color: var(--text2); }
-    .step-arrow { color: var(--border2); font-size: 12px; padding-right: 16px; }
+    /* ── Scenario Nav ─────────────────────────────── */
+    .scenario-nav { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); background: var(--bg); flex-shrink: 0; overflow-x: auto; }
+    .scenario-tab { display: flex; align-items: center; gap: 8px; padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text3); font-size: 12px; font-weight: 500; white-space: nowrap; transition: all 0.2s; user-select: none; flex-shrink: 0; }
+    .scenario-tab:hover { color: var(--text2); background: rgba(255,255,255,0.02); }
+    .scenario-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .scenario-tab.done .tab-num { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+    .tab-num { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); color: var(--text3); font-size: 10px; font-weight: 700; font-family: var(--mono); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s; }
+    .scenario-tab.active .tab-num { background: rgba(108,108,255,0.15); border-color: var(--accent); color: var(--accent); }
 
-    /* Main content */
-    .main { flex: 1; display: flex; overflow: hidden; }
-    .panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-    .panel-agent { border-right: 1px solid var(--border); }
-    .panel-merchant { background: var(--bg); }
-    .panel-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; font-family: var(--mono); }
+    /* ── Main ─────────────────────────────── */
+    .main { flex: 1; overflow: hidden; position: relative; }
+    .scene { display: none; height: 100%; overflow: hidden; }
+    .scene.active { display: flex; flex-direction: column; }
+    .scene-body { flex: 1; display: flex; overflow: hidden; }
 
-    /* Cards */
-    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.3s; }
+    /* ── Columns ─────────────────────────────── */
+    .col { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .col + .col { border-left: 1px solid var(--border); }
+    .col-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 2px; font-family: var(--mono); display: flex; align-items: center; gap: 6px; }
+
+    /* ── Cards ─────────────────────────────── */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; transition: border-color 0.3s; }
     .card.highlight { border-color: rgba(108,108,255,0.4); }
-    .card.success { border-color: rgba(34,197,94,0.4); }
-    .card-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .card-title svg { width: 14px; height: 14px; }
+    .card.success { border-color: rgba(34,197,94,0.35); }
+    .card.warning { border-color: rgba(234,179,8,0.35); }
+    .card-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 10px; display: flex; align-items: center; gap: 7px; text-transform: uppercase; letter-spacing: 0.6px; }
 
-    /* Wallet Card */
-    .wallet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .agent-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); transition: background 0.3s; }
-    .status-dot.idle { background: var(--text3); }
-    .status-dot.active { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse 1s infinite; }
-    .status-dot.done { background: var(--green); box-shadow: 0 0 6px var(--green); animation: none; }
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .wallet-field { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
-    .wallet-field-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; font-family: var(--mono); }
-    .wallet-field-value { font-size: 13px; font-family: var(--mono); color: var(--text); }
-    .wallet-field-value.green { color: var(--green); }
-    .wallet-field-value.mono { font-size: 11px; color: var(--text2); }
-    .wallet-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text3); font-family: var(--mono); margin-top: 10px; }
+    /* ── Code Panel ─────────────────────────────── */
+    .code-block { background: #080810; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--mono); font-size: 11.5px; line-height: 1.9; }
+    .code-block .cb-line { opacity: 0; transition: opacity 0.2s; }
+    .code-block .cb-line.visible { opacity: 1; }
+    .t-kw { color: #c792ea; }
+    .t-fn { color: #82aaff; }
+    .t-str { color: #c3e88d; }
+    .t-num { color: #f78c6c; }
+    .t-key { color: var(--teal); }
+    .t-op { color: var(--text3); }
+    .t-cm { color: var(--text3); font-style: italic; }
+    .t-const { color: #ffcb6b; }
+    .t-obj { color: var(--text2); }
 
-    /* Spend Policy Section */
-    .policy-section { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
-    .policy-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-family: var(--mono); margin-bottom: 8px; }
-    .policy-label svg { color: var(--accent); opacity: 0.8; }
-    .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .policy-field { background: rgba(108,108,255,0.05); border: 1px solid rgba(108,108,255,0.15); border-radius: 6px; padding: 8px 12px; }
-    .policy-field-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; font-family: var(--mono); }
-    .policy-field-value { font-size: 13px; font-family: var(--mono); color: var(--text); }
-    .policy-approval { display: flex; align-items: center; justify-content: space-between; background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.15); border-radius: 6px; padding: 8px 12px; font-size: 12px; }
-    .policy-approval-label { color: var(--text3); font-family: var(--mono); }
-    .policy-approval-value { color: var(--green); font-family: var(--mono); font-weight: 600; font-size: 11px; }
-
-    /* Developer Notification Card */
-    .dev-notify { border-color: rgba(108,108,255,0.3) !important; background: rgba(108,108,255,0.04) !important; opacity: 0; transform: translateY(8px); transition: opacity 0.4s, transform 0.4s; }
-    .dev-notify.visible { opacity: 1; transform: translateY(0); }
-    .dev-notify-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .dev-notify-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(108,108,255,0.15); border: 1px solid rgba(108,108,255,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .dev-notify-title { font-size: 13px; font-weight: 600; color: var(--text); }
-    .dev-notify-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
-    .dev-notify-body { font-size: 12px; color: var(--text2); line-height: 1.6; font-family: var(--mono); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
-    .dev-notify-footer { font-size: 11px; color: var(--accent); opacity: 0.8; }
-
-    /* Log Terminal */
-    .log-terminal { background: #080810; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: var(--mono); font-size: 12px; line-height: 1.8; min-height: 180px; position: relative; overflow: hidden; }
-    .log-empty { color: var(--text3); font-style: italic; }
-    .log-line { opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s; }
+    /* ── Log Terminal ─────────────────────────────── */
+    .log-terminal { background: #080810; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--mono); font-size: 11.5px; line-height: 1.85; min-height: 140px; overflow-x: auto; }
+    .log-line { opacity: 0; transform: translateY(3px); transition: opacity 0.18s, transform 0.18s; white-space: nowrap; }
     .log-line.visible { opacity: 1; transform: translateY(0); }
-    .log-line.req { color: var(--teal); }
-    .log-line.res-err { color: var(--red); }
-    .log-line.info { color: var(--text2); padding-left: 16px; }
-    .log-line.check { color: var(--green); }
-    .log-line.action { color: var(--accent); }
-    .log-line.res-ok { color: var(--green); font-weight: 600; }
-    .log-line.blank { height: 6px; }
-    .cursor { display: inline-block; width: 7px; height: 13px; background: var(--accent); animation: blink 1s infinite; vertical-align: middle; margin-left: 2px; border-radius: 1px; }
-    @keyframes blink { 0%,49% {opacity:1;} 50%,100% {opacity:0;} }
+    .ll-req { color: var(--teal); }
+    .ll-res-err { color: var(--red); }
+    .ll-info { color: var(--text2); padding-left: 14px; }
+    .ll-check { color: var(--green); }
+    .ll-action { color: var(--accent); }
+    .ll-res-ok { color: var(--green); font-weight: 600; }
+    .ll-blank { height: 5px; }
+    .ll-warn { color: var(--yellow); }
+    .ll-purple { color: var(--purple); }
+    .ll-dim { color: var(--text3); padding-left: 14px; }
+    .log-empty { color: var(--text3); font-style: italic; font-size: 11px; }
+    .cursor { display: inline-block; width: 6px; height: 12px; background: var(--accent); animation: blink 1s infinite; vertical-align: middle; margin-left: 2px; border-radius: 1px; }
+    @keyframes blink { 0%,49%{opacity:1;}50%,100%{opacity:0;} }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.35;} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);} }
 
-    /* Transaction Card */
-    .tx-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-family: var(--mono); font-size: 12px; opacity: 0; transform: translateY(8px); transition: opacity 0.4s, transform 0.4s; }
+    /* ── Wallet Panel ─────────────────────────────── */
+    .wallet-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .wallet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .agent-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); transition: background 0.3s; }
+    .status-dot.idle { background: var(--text3); }
+    .status-dot.active { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); animation: pulse 1s infinite; }
+    .status-dot.done { background: var(--green); box-shadow: 0 0 5px var(--green); }
+    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .wallet-field { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; }
+    .wf-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-family: var(--mono); }
+    .wf-value { font-size: 12px; font-family: var(--mono); color: var(--text); transition: color 0.4s; }
+    .wf-value.green { color: var(--green); }
+    .wf-value.accent { color: var(--accent); }
+    .wf-value.dim { color: var(--text3); font-style: italic; }
+
+    /* ── Policy Section ─────────────────────────────── */
+    .policy-section { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; }
+    .policy-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text3); font-family: var(--mono); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+    .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 7px; }
+    .policy-field { background: rgba(108,108,255,0.05); border: 1px solid rgba(108,108,255,0.15); border-radius: 5px; padding: 7px 10px; }
+    .pf-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; font-family: var(--mono); }
+    .pf-value { font-size: 12px; font-family: var(--mono); color: var(--text); }
+    .policy-row { display: flex; align-items: center; justify-content: space-between; background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.15); border-radius: 5px; padding: 7px 10px; font-size: 11px; }
+    .policy-row-label { color: var(--text3); font-family: var(--mono); }
+    .policy-row-val { color: var(--green); font-family: var(--mono); font-weight: 600; font-size: 10px; }
+
+    /* ── Checklist ─────────────────────────────── */
+    .checklist { display: flex; flex-direction: column; gap: 7px; }
+    .check-item { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; font-size: 12px; opacity: 0; transform: translateX(-6px); transition: opacity 0.25s, transform 0.25s, border-color 0.25s; }
+    .check-item.visible { opacity: 1; transform: translateX(0); }
+    .check-item.visible.ok { border-color: rgba(34,197,94,0.3); }
+    .check-icon { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all 0.25s; }
+    .check-icon.ok { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+    .check-icon.loading { border-color: var(--accent); animation: spin 1s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .check-text { flex: 1; }
+    .check-meta { font-size: 10.5px; color: var(--text3); font-family: var(--mono); margin-top: 1px; }
+
+    /* ── CRM / ERP Cards ─────────────────────────────── */
+    .sys-card { opacity: 0; transform: translateY(6px); transition: opacity 0.35s, transform 0.35s; }
+    .sys-card.visible { opacity: 1; transform: translateY(0); }
+    .sys-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .sys-logo { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.3px; }
+    .sys-logo.hubspot { background: #ff7a59; color: #fff; }
+    .sys-logo.netsuite { background: #1f6bff; color: #fff; }
+    .sys-logo.webhook { background: var(--bg3); color: var(--accent); border: 1px solid rgba(108,108,255,0.3); }
+    .sys-event { font-size: 11px; font-weight: 600; }
+    .sys-event.green { color: var(--green); }
+    .sys-event.blue { color: var(--teal); }
+    .sys-event.purple { color: var(--purple); }
+    .sys-fields { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 10px; }
+    .sys-field { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; }
+    .sys-field:last-child { border-bottom: none; }
+    .sf-key { color: var(--text3); }
+    .sf-val { color: var(--text); font-family: var(--mono); }
+    .sf-val.green { color: var(--green); }
+    .sf-val.accent { color: var(--accent); }
+    .sim-badge { font-size: 9px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.25); color: var(--yellow); padding: 1px 5px; border-radius: 3px; margin-left: 6px; }
+
+    /* ── TX Card ─────────────────────────────── */
+    .tx-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-family: var(--mono); font-size: 11.5px; opacity: 0; transform: translateY(6px); transition: opacity 0.35s, transform 0.35s; }
     .tx-card.visible { opacity: 1; transform: translateY(0); }
-    .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--border); }
     .tx-row:last-child { border-bottom: none; }
     .tx-key { color: var(--text3); }
     .tx-val { color: var(--text); }
     .tx-val.green { color: var(--green); }
     .tx-val.accent { color: var(--accent); }
 
-    /* Verification Checklist */
-    .checklist { display: flex; flex-direction: column; gap: 8px; }
-    .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; opacity: 0; transform: translateX(-8px); transition: opacity 0.3s, transform 0.3s, border-color 0.3s; }
-    .check-item.visible { opacity: 1; transform: translateX(0); }
-    .check-item.visible.ok { border-color: rgba(34,197,94,0.3); }
-    .check-icon { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.3s; }
-    .check-icon.ok { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
-    .check-text { flex: 1; }
-    .check-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+    /* ── Escrow State Machine ─────────────────────────────── */
+    .escrow-states { display: flex; align-items: center; gap: 0; margin: 4px 0 12px; overflow-x: auto; }
+    .es-state { font-size: 10px; font-weight: 600; font-family: var(--mono); padding: 5px 10px; border: 1px solid var(--border); border-radius: 3px; color: var(--text3); background: var(--bg3); transition: all 0.3s; white-space: nowrap; }
+    .es-state.active { border-color: var(--accent); color: var(--accent); background: rgba(108,108,255,0.1); }
+    .es-state.done { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.08); }
+    .es-arrow { color: var(--border2); font-size: 12px; padding: 0 4px; flex-shrink: 0; }
 
-    /* CRM Card */
-    .crm-card { opacity: 0; transform: translateY(8px); transition: opacity 0.4s, transform 0.4s; }
-    .crm-card.visible { opacity: 1; transform: translateY(0); }
-    .crm-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .crm-logo { background: #ff7a59; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.3px; }
-    .crm-event { font-size: 12px; color: var(--green); font-weight: 600; }
-    .crm-field { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-    .crm-field:last-child { border-bottom: none; }
-    .crm-key { color: var(--text3); }
-    .crm-val { color: var(--text); font-family: var(--mono); }
-    .crm-val.green { color: var(--green); }
-    .sim-badge { display: inline-block; font-size: 10px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); color: var(--yellow); padding: 1px 6px; border-radius: 3px; margin-left: 8px; }
+    /* ── Data payload panel ─────────────────────────────── */
+    .data-panel { background: #080810; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-family: var(--mono); font-size: 11px; line-height: 1.8; opacity: 0; transition: opacity 0.4s; }
+    .data-panel.visible { opacity: 1; }
+    .dp-key { color: var(--teal); }
+    .dp-str { color: #c3e88d; }
+    .dp-num { color: #f78c6c; }
+    .dp-arr { color: var(--text2); }
+    .finding-box { background: rgba(108,108,255,0.06); border: 1px solid rgba(108,108,255,0.2); border-radius: 6px; padding: 12px 14px; font-size: 13px; color: var(--text); line-height: 1.6; opacity: 0; transition: opacity 0.4s; }
+    .finding-box.visible { opacity: 1; }
 
-    /* Idle Placeholder */
-    .idle-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 8px; color: var(--text3); text-align: center; padding: 40px; }
-    .idle-icon { font-size: 32px; opacity: 0.3; }
-    .idle-text { font-size: 13px; }
-
-    /* Summary bar */
-    .summary-bar { display: none; align-items: center; justify-content: center; gap: 32px; padding: 12px 24px; background: rgba(34,197,94,0.06); border-top: 1px solid rgba(34,197,94,0.2); flex-shrink: 0; }
+    /* ── Summary / CTA ─────────────────────────────── */
+    .summary-bar { display: none; align-items: center; justify-content: center; gap: 28px; padding: 10px 20px; background: rgba(34,197,94,0.05); border-top: 1px solid rgba(34,197,94,0.15); flex-shrink: 0; flex-wrap: wrap; }
     .summary-bar.visible { display: flex; }
     .summary-stat { text-align: center; }
-    .summary-val { font-size: 18px; font-weight: 700; font-family: var(--mono); color: var(--green); }
-    .summary-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* CTA Banner */
-    .cta-bar { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 20px 24px; background: linear-gradient(135deg, rgba(108,108,255,0.08) 0%, rgba(108,108,255,0.03) 100%); border-top: 1px solid rgba(108,108,255,0.25); flex-shrink: 0; text-align: center; }
+    .summary-val { font-size: 17px; font-weight: 700; font-family: var(--mono); color: var(--green); }
+    .summary-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .cta-bar { display: none; flex-direction: column; align-items: center; gap: 9px; padding: 16px 20px; background: linear-gradient(135deg,rgba(108,108,255,0.07),rgba(108,108,255,0.02)); border-top: 1px solid rgba(108,108,255,0.2); text-align: center; flex-shrink: 0; }
     .cta-bar.visible { display: flex; }
-    .cta-heading { font-size: 15px; font-weight: 600; color: var(--text); }
+    .cta-heading { font-size: 14px; font-weight: 600; }
     .cta-sub { font-size: 12px; color: var(--text2); }
-    .cta-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-    .btn-cta { background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 22px; border-radius: 6px; border: none; cursor: pointer; transition: background 0.15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .cta-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .btn-cta { background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: background 0.15s; }
     .btn-cta:hover { background: var(--accent2); }
-    .btn-share { background: transparent; border: 1px solid var(--border2); color: var(--text2); font-size: 12px; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-share { background: transparent; border: 1px solid var(--border2); color: var(--text2); font-size: 11px; padding: 7px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
     .btn-share:hover { border-color: var(--accent); color: var(--text); }
     .copied-hint { font-size: 11px; color: var(--green); opacity: 0; transition: opacity 0.3s; }
     .copied-hint.show { opacity: 1; }
+    .next-btn { display: none; }
+    .next-btn.visible { display: inline-flex; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
+    /* ── Notification card ─────────────────────────────── */
+    .notify-card { background: rgba(108,108,255,0.04); border: 1px solid rgba(108,108,255,0.25); border-radius: 8px; padding: 12px 14px; opacity: 0; transform: translateY(6px); transition: opacity 0.35s, transform 0.35s; }
+    .notify-card.visible { opacity: 1; transform: translateY(0); }
+    .notify-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .notify-icon { width: 26px; height: 26px; border-radius: 50%; background: rgba(108,108,255,0.15); border: 1px solid rgba(108,108,255,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .notify-body { font-size: 11.5px; color: var(--text2); font-family: var(--mono); background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 9px 11px; line-height: 1.7; }
+    .notify-foot { font-size: 11px; color: var(--accent); opacity: 0.8; margin-top: 8px; }
+
+    /* ── Idle placeholder ─────────────────────────────── */
+    .idle-ph { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 6px; color: var(--text3); text-align: center; padding: 32px 20px; }
+    .idle-ph-icon { font-size: 28px; opacity: 0.25; }
+    .idle-ph-text { font-size: 12px; line-height: 1.5; max-width: 260px; }
+
+    /* ── Verify result ─────────────────────────────── */
+    .verify-result { display: none; margin-top: 10px; padding: 9px 12px; border-radius: 5px; background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.25); font-size: 13px; font-weight: 600; color: var(--green); }
+    .verify-result.visible { display: block; }
+
+    /* ── Scrollbar ─────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-    /* Tab bar (mobile only) */
-    .tab-bar { display: none; }
-
     /* ── Mobile ─────────────────────────────── */
-    @media (max-width: 768px) {
-      html, body { height: auto; }
-      .app { height: auto; min-height: 100vh; overflow: visible; }
-
-      /* Header */
-      .header { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    @media (max-width: 700px) {
       .sim-note { display: none; }
-      .logo { font-size: 15px; }
-      .btn { padding: 8px 14px; min-height: 40px; }
-
-      /* Steps: numbers only */
-      .steps { padding: 0 12px; height: 38px; }
-      .step { padding: 0 6px 0 0; }
-      .step-label { display: none; }
-      .step-arrow { padding-right: 6px; font-size: 10px; }
-      .step-num { width: 26px; height: 26px; font-size: 11px; }
-
-      /* Tab bar */
-      .tab-bar {
-        display: flex;
-        flex-shrink: 0;
-        border-bottom: 1px solid var(--border);
-        background: var(--bg2);
-      }
-      .tab-btn {
-        flex: 1; padding: 11px 8px; text-align: center;
-        font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
-        cursor: pointer; border: none; background: transparent;
-        color: var(--text3); border-bottom: 2px solid transparent;
-        transition: color 0.2s, border-color 0.2s;
-        font-family: var(--sans);
-      }
-      .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-      .tab-btn .tab-dot {
-        display: inline-block; width: 6px; height: 6px;
-        border-radius: 50%; background: var(--text3);
-        margin-right: 6px; vertical-align: middle;
-        transition: background 0.3s;
-      }
-      .tab-btn.active .tab-dot { background: var(--accent); }
-      .tab-btn.merchant-ready .tab-dot { background: var(--yellow); animation: pulse 1s infinite; }
-      .tab-btn.merchant-done .tab-dot { background: var(--green); animation: none; }
-
-      /* Panels: tab-driven visibility */
-      .main { flex-direction: column; overflow: visible; }
-      .panel { flex: none; display: none; overflow: visible; padding: 12px; }
-      .panel.tab-active { display: flex; }
-      .panel-agent { border-right: none; }
-
-      /* Wallet grid — full width on narrow */
-      .wallet-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-      .wallet-field { padding: 8px 10px; }
-
-      /* Log terminal — allow x-scroll for long lines */
-      .log-terminal { font-size: 11px; overflow-x: auto; min-height: 140px; }
-      .log-line { white-space: nowrap; }
-
-      /* TX rows — stack on very narrow */
-      .tx-row { flex-wrap: wrap; gap: 2px; }
-
-      /* Idle placeholder */
-      .idle-placeholder { padding: 24px; }
-
-      /* Summary bar */
-      .summary-bar {
-        flex-wrap: wrap; gap: 10px 0;
-        padding: 12px 16px; justify-content: space-around;
-      }
-      .summary-stat { min-width: calc(33% - 8px); }
-      .summary-val { font-size: 15px; }
-
-      /* CTA bar */
-      .cta-bar { padding: 16px; gap: 8px; }
-      .cta-heading { font-size: 14px; }
-      .cta-actions { gap: 8px; }
-      .btn-cta { width: 100%; justify-content: center; }
+      .scene-body { flex-direction: column; }
+      .col + .col { border-left: none; border-top: 1px solid var(--border); }
+      .wallet-grid { grid-template-columns: 1fr 1fr; }
+      .policy-grid { grid-template-columns: 1fr 1fr; }
+      .summary-bar { gap: 14px; }
+      .escrow-states { flex-wrap: wrap; gap: 4px; }
+      .es-arrow { display: none; }
+      .log-terminal { min-height: 100px; }
     }
-
-    @media (max-width: 380px) {
-      .wallet-grid { grid-template-columns: 1fr; }
-      .header-right .badge { display: none; }
+    @media (max-width: 480px) {
+      .scenario-tab .tab-label { display: none; }
+      .scenario-tab { padding: 10px 12px; }
+      .header { padding: 8px 12px; }
     }
   </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Header -->
+  <!-- ── Header ──────────────────────────────────── -->
   <div class="header">
     <div class="header-left">
       <div class="logo">Pooly<span>.</span>AI</div>
       <div class="badge">Interactive Demo</div>
+      <span class="sim-note">Simulated — no real blockchain calls</span>
     </div>
     <div class="header-right">
-      <span class="sim-note" style="font-size:11px;color:var(--text3);font-family:var(--mono)">Simulated — no real blockchain calls</span>
-      <button class="btn btn-ghost" id="resetBtn" onclick="resetDemo()" style="display:none">↺ Reset</button>
-      <button class="btn btn-primary" id="runBtn" onclick="runDemo()">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2l7 4-7 4V2z"/></svg>
+      <button class="btn btn-ghost" id="globalResetBtn" onclick="resetCurrent()" style="display:none">↺ Reset</button>
+      <button class="btn btn-primary" id="globalRunBtn" onclick="runCurrent()">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2l7 4-7 4V2z"/></svg>
         Run Demo
       </button>
     </div>
   </div>
 
-  <!-- Steps -->
-  <div class="steps">
-    <div class="step" id="step1">
-      <div class="step-num">1</div>
-      <div class="step-label">Agent Wallet</div>
+  <!-- ── Scenario Nav ──────────────────────────────────── -->
+  <div class="scenario-nav" id="scenarioNav">
+    <div class="scenario-tab active" id="stab1" onclick="switchScene(1)">
+      <div class="tab-num" id="tnum1">1</div>
+      <span class="tab-label">Developer Setup</span>
     </div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="step2">
-      <div class="step-num">2</div>
-      <div class="step-label">HTTP 402 Hit</div>
+    <div class="scenario-tab" id="stab2" onclick="switchScene(2)">
+      <div class="tab-num" id="tnum2">2</div>
+      <span class="tab-label">HTTP 402 Flow</span>
     </div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="step3">
-      <div class="step-num">3</div>
-      <div class="step-label">Pooly Intercepts</div>
+    <div class="scenario-tab" id="stab3" onclick="switchScene(3)">
+      <div class="tab-num" id="tnum3">3</div>
+      <span class="tab-label">Data Purchase</span>
     </div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="step4">
-      <div class="step-num">4</div>
-      <div class="step-label">Payment Settles</div>
+    <div class="scenario-tab" id="stab4" onclick="switchScene(4)">
+      <div class="tab-num" id="tnum4">4</div>
+      <span class="tab-label">Task Escrow</span>
     </div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="step5">
-      <div class="step-num">5</div>
-      <div class="step-label">Agent Verified</div>
-    </div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="step6">
-      <div class="step-num">6</div>
-      <div class="step-label">CRM Record</div>
+    <div class="scenario-tab" id="stab5" onclick="switchScene(5)">
+      <div class="tab-num" id="tnum5">5</div>
+      <span class="tab-label">Merchant View</span>
     </div>
   </div>
 
-  <!-- Tab bar (mobile only) -->
-  <div class="tab-bar">
-    <button class="tab-btn active" id="tabAgent" onclick="switchTab('agent')">
-      <span class="tab-dot"></span>Agent Side
-    </button>
-    <button class="tab-btn" id="tabMerchant" onclick="switchTab('merchant')">
-      <span class="tab-dot"></span>Merchant Side
-    </button>
-  </div>
+  <!-- ══════════════════════════════════════════════════════
+       SCENE 1 — DEVELOPER SETUP
+  ══════════════════════════════════════════════════════ -->
+  <div class="scene active" id="scene1">
+    <div class="scene-body">
 
-  <!-- Main panels -->
-  <div class="main">
+      <!-- Left: Code panel -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          SDK Integration — developer@acme.com
+        </div>
 
-    <!-- Agent Side -->
-    <div class="panel panel-agent tab-active" id="panelAgent">
-      <div class="panel-label">
-        <svg style="display:inline;vertical-align:middle;margin-right:4px" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Developer View — developer@acme.com
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Step 1 — Install &amp; Initialize
+          </div>
+          <div class="code-block" id="code1a">
+            <div class="cb-line" id="cl1_1"><span class="t-cm"># terminal</span></div>
+            <div class="cb-line" id="cl1_2"><span class="t-op">$</span> <span class="t-fn">npm</span> <span class="t-str">install</span> <span class="t-const">@pooly/sdk</span></div>
+            <div class="cb-line" id="cl1_3">&nbsp;</div>
+            <div class="cb-line" id="cl1_4"><span class="t-cm">// agent.ts</span></div>
+            <div class="cb-line" id="cl1_5"><span class="t-kw">import</span> Pooly <span class="t-kw">from</span> <span class="t-str">'@pooly/sdk'</span></div>
+            <div class="cb-line" id="cl1_6">&nbsp;</div>
+            <div class="cb-line" id="cl1_7"><span class="t-kw">const</span> <span class="t-const">pooly</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Pooly</span><span class="t-op">(</span><span class="t-obj">{</span></div>
+            <div class="cb-line" id="cl1_8">&nbsp;&nbsp;<span class="t-key">apiKey</span><span class="t-op">:</span> <span class="t-str">'pk_live_a8x…'</span></div>
+            <div class="cb-line" id="cl1_9"><span class="t-obj">}</span><span class="t-op">)</span></div>
+          </div>
+        </div>
+
+        <div class="card" id="card1b" style="opacity:0;transition:opacity 0.4s">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
+            Step 2 — Create Agent Wallet
+          </div>
+          <div class="code-block" id="code1b">
+            <div class="cb-line" id="cl2_1"><span class="t-kw">const</span> <span class="t-const">wallet</span> <span class="t-op">=</span> <span class="t-kw">await</span> pooly<span class="t-op">.</span><span class="t-fn">wallets</span><span class="t-op">.</span><span class="t-fn">create</span><span class="t-op">(</span><span class="t-obj">{</span></div>
+            <div class="cb-line" id="cl2_2">&nbsp;&nbsp;<span class="t-key">agentId</span><span class="t-op">:</span> <span class="t-str">'research-agent-7'</span><span class="t-op">,</span></div>
+            <div class="cb-line" id="cl2_3">&nbsp;&nbsp;<span class="t-key">label</span><span class="t-op">:</span> <span class="t-str">'Research Agent'</span><span class="t-op">,</span></div>
+            <div class="cb-line" id="cl2_4">&nbsp;&nbsp;<span class="t-key">network</span><span class="t-op">:</span> <span class="t-str">'base'</span></div>
+            <div class="cb-line" id="cl2_5"><span class="t-obj">}</span><span class="t-op">)</span></div>
+            <div class="cb-line" id="cl2_6">&nbsp;</div>
+            <div class="cb-line" id="cl2_7"><span class="t-cm">// ← { walletId: 'wal_4f3a…d291',</span></div>
+            <div class="cb-line" id="cl2_8"><span class="t-cm">//      address: '0x4f3a…d291',</span></div>
+            <div class="cb-line" id="cl2_9"><span class="t-cm">//      status: 'created' }</span></div>
+          </div>
+        </div>
+
+        <div class="card" id="card1c" style="opacity:0;transition:opacity 0.4s">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            Step 3 — Top Up &amp; Set Limits
+          </div>
+          <div class="code-block" id="code1c">
+            <div class="cb-line" id="cl3_1"><span class="t-kw">await</span> pooly<span class="t-op">.</span><span class="t-fn">wallets</span><span class="t-op">.</span><span class="t-fn">topup</span><span class="t-op">(</span><span class="t-obj">{</span></div>
+            <div class="cb-line" id="cl3_2">&nbsp;&nbsp;<span class="t-key">walletId</span><span class="t-op">:</span> wallet<span class="t-op">.</span>id<span class="t-op">,</span></div>
+            <div class="cb-line" id="cl3_3">&nbsp;&nbsp;<span class="t-key">amount</span><span class="t-op">:</span> <span class="t-num">50</span><span class="t-op">,</span> <span class="t-key">currency</span><span class="t-op">:</span> <span class="t-str">'USDC'</span><span class="t-op">,</span></div>
+            <div class="cb-line" id="cl3_4">&nbsp;&nbsp;<span class="t-key">method</span><span class="t-op">:</span> <span class="t-str">'fiat'</span></div>
+            <div class="cb-line" id="cl3_5"><span class="t-obj">}</span><span class="t-op">)</span></div>
+            <div class="cb-line" id="cl3_6">&nbsp;</div>
+            <div class="cb-line" id="cl3_7"><span class="t-kw">await</span> pooly<span class="t-op">.</span><span class="t-fn">wallets</span><span class="t-op">.</span><span class="t-fn">setLimits</span><span class="t-op">(</span><span class="t-obj">{</span></div>
+            <div class="cb-line" id="cl3_8">&nbsp;&nbsp;<span class="t-key">walletId</span><span class="t-op">:</span> wallet<span class="t-op">.</span>id<span class="t-op">,</span></div>
+            <div class="cb-line" id="cl3_9">&nbsp;&nbsp;<span class="t-key">dailyLimit</span><span class="t-op">:</span> <span class="t-num">10.00</span><span class="t-op">,</span></div>
+            <div class="cb-line" id="cl3_10">&nbsp;&nbsp;<span class="t-key">perMerchantCap</span><span class="t-op">:</span> <span class="t-num">2.00</span><span class="t-op">,</span></div>
+            <div class="cb-line" id="cl3_11">&nbsp;&nbsp;<span class="t-key">requireApproval</span><span class="t-op">:</span> <span class="t-kw">false</span></div>
+            <div class="cb-line" id="cl3_12"><span class="t-obj">}</span><span class="t-op">)</span></div>
+            <div class="cb-line" id="cl3_13">&nbsp;</div>
+            <div class="cb-line" id="cl3_14"><span class="t-cm">// ✅ Agent wallet live — runs autonomously</span></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Wallet Card -->
-      <div class="card" id="walletCard">
-        <div class="card-title" style="justify-content:space-between">
-          <span style="display:flex;align-items:center;gap:8px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/><circle cx="16" cy="14" r="2" fill="currentColor" stroke="none"/></svg>
+      <!-- Right: Live wallet state -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/><circle cx="16" cy="14" r="2" fill="currentColor" stroke="none"/></svg>
+          Live Wallet State
+        </div>
+
+        <div class="wallet-panel" id="walletPanel1">
+          <div class="wallet-header">
+            <div class="agent-name">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h.01M15 9h.01M9 14s1 2 3 2 3-2 3-2"/></svg>
+              ResearchAgent-7
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
+              <div class="status-dot idle" id="s1dot"></div>
+              <span id="s1status">Idle</span>
+            </div>
+          </div>
+          <div class="wallet-grid">
+            <div class="wallet-field">
+              <div class="wf-label">Wallet Address</div>
+              <div class="wf-value dim" id="w1addr">— pending</div>
+            </div>
+            <div class="wallet-field">
+              <div class="wf-label">Balance</div>
+              <div class="wf-value dim" id="w1balance">—</div>
+            </div>
+            <div class="wallet-field">
+              <div class="wf-label">Network</div>
+              <div class="wf-value dim" id="w1network">—</div>
+            </div>
+            <div class="wallet-field">
+              <div class="wf-label">Identity (ERC-8004)</div>
+              <div class="wf-value dim" id="w1identity">—</div>
+            </div>
+          </div>
+          <div class="policy-section">
+            <div class="policy-label">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Spend Policy
+            </div>
+            <div class="policy-grid">
+              <div class="policy-field">
+                <div class="pf-label">Daily Limit</div>
+                <div class="pf-value" id="w1daily" style="color:var(--text3)">—</div>
+              </div>
+              <div class="policy-field">
+                <div class="pf-label">Per-Merchant Cap</div>
+                <div class="pf-value" id="w1permerch" style="color:var(--text3)">—</div>
+              </div>
+            </div>
+            <div class="policy-row">
+              <span class="policy-row-label">Human approval required</span>
+              <span class="policy-row-val" id="w1approval" style="color:var(--text3)">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="s1apiLog">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            API Response Log
+          </div>
+          <div class="log-terminal" id="s1log">
+            <div class="log-empty" id="s1logEmpty">Waiting for setup to run…</div>
+            <div id="s1logLines"></div>
+          </div>
+        </div>
+
+        <div class="notify-card" id="s1notify" style="display:none">
+          <div class="notify-header">
+            <div class="notify-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600">Agent wallet live</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:1px">Setup complete — 8.2s</div>
+            </div>
+          </div>
+          <div class="notify-body">
+ResearchAgent-7  ·  wallet: 0x4f3a…d291
+Balance: $50.000 USDC  ·  Daily limit: $10.00
+Identity: ERC-8004 #1024 on Base
+Fund once. Set rules once. Your agent runs forever.
+          </div>
+          <div class="notify-foot">Next: watch the agent pay autonomously →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar" id="s1summary">
+      <div class="summary-stat"><div class="summary-val">3</div><div class="summary-label">Lines of Code</div></div>
+      <div class="summary-stat"><div class="summary-val">$50</div><div class="summary-label">USDC Deposited</div></div>
+      <div class="summary-stat"><div class="summary-val">8.2s</div><div class="summary-label">Setup Time</div></div>
+      <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">Humans Needed</div></div>
+      <button class="btn btn-ghost" onclick="resetCurrent()" style="font-size:11px">↺ Reset</button>
+      <button class="btn btn-primary next-btn visible" onclick="switchScene(2)" style="font-size:11px">Scene 2: HTTP 402 →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCENE 2 — HTTP 402 FLOW
+  ══════════════════════════════════════════════════════ -->
+  <div class="scene" id="scene2">
+    <div class="scene-body">
+
+      <!-- Agent side -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h.01M15 9h.01M9 14s1 2 3 2 3-2 3-2"/></svg>
+          Agent Side — ResearchAgent-7
+        </div>
+
+        <!-- Wallet (pre-populated from scene 1) -->
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
             Agent Wallet
-          </span>
-          <span style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--mono);text-transform:none;letter-spacing:0">funded by you</span>
-        </div>
-        <div class="wallet-header">
-          <div class="agent-name">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h.01M15 9h.01M9 14s1 2 3 2 3-2 3-2"/></svg>
-            ResearchAgent-7
           </div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
-            <div class="status-dot idle" id="statusDot"></div>
-            <span id="statusText">Idle</span>
-          </div>
-        </div>
-        <div class="wallet-grid">
-          <div class="wallet-field">
-            <div class="wallet-field-label">Wallet</div>
-            <div class="wallet-field-value mono">0x4f3a…d291</div>
-          </div>
-          <div class="wallet-field">
-            <div class="wallet-field-label">Balance</div>
-            <div class="wallet-field-value green" id="balance">$12.400 USDC</div>
-          </div>
-        </div>
-
-        <!-- Spend Policy — developer-configured rules -->
-        <div class="policy-section">
-          <div class="policy-label">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            Your Spend Policy
-          </div>
-          <div class="policy-grid">
-            <div class="policy-field">
-              <div class="policy-field-label">Daily Limit</div>
-              <div class="policy-field-value">$5.00 / day</div>
+          <div class="wallet-header">
+            <div class="agent-name">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+              ResearchAgent-7
             </div>
-            <div class="policy-field">
-              <div class="policy-field-label">Per-Merchant Cap</div>
-              <div class="policy-field-value">$2.00 / tx</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
+              <div class="status-dot idle" id="s2dot"></div>
+              <span id="s2status">Idle</span>
             </div>
           </div>
-          <div class="policy-approval">
-            <span class="policy-approval-label">Human approval required</span>
-            <span class="policy-approval-value">None — agent runs autonomously</span>
+          <div class="wallet-grid">
+            <div class="wallet-field"><div class="wf-label">Wallet</div><div class="wf-value" style="font-size:11px;color:var(--text2)">0x4f3a…d291</div></div>
+            <div class="wallet-field"><div class="wf-label">Balance</div><div class="wf-value green" id="s2balance">$50.000 USDC</div></div>
+            <div class="wallet-field"><div class="wf-label">Identity</div><div class="wf-value" style="font-size:11px;color:var(--accent)">ERC-8004 #1024</div></div>
+            <div class="wallet-field"><div class="wf-label">ANS Name</div><div class="wf-value" style="font-size:9.5px;color:var(--text2)">mcp://research-agent…v1.0</div></div>
+          </div>
+          <div class="policy-section">
+            <div class="policy-label">Spend Policy</div>
+            <div class="policy-grid">
+              <div class="policy-field"><div class="pf-label">Daily Limit</div><div class="pf-value">$10.00 / day</div></div>
+              <div class="policy-field"><div class="pf-label">Per-Merchant</div><div class="pf-value">$2.00 / tx</div></div>
+            </div>
+            <div class="policy-row"><span class="policy-row-label">Human approval required</span><span class="policy-row-val">None — autonomous</span></div>
           </div>
         </div>
 
-        <div class="wallet-status">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <span id="walletStatus">Waiting for task…</span>
-        </div>
-      </div>
-
-      <!-- Log Terminal -->
-      <div class="card" id="logCard">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          Payment Execution Log
-        </div>
-        <div class="log-terminal" id="logTerminal">
-          <div class="log-empty" id="logEmpty">Waiting for agent to execute task…</div>
-          <div id="logLines"></div>
-          <span class="cursor" id="logCursor" style="display:none"></span>
-        </div>
-      </div>
-
-      <!-- Transaction Card -->
-      <div class="card" id="txCardWrap" style="display:none">
-        <div class="card-title" style="color:var(--green)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          Transaction Settled
-        </div>
-        <div class="tx-card visible" id="txCard">
-          <div class="tx-row"><span class="tx-key">Txn ID</span><span class="tx-val accent">TXN-8842</span></div>
-          <div class="tx-row"><span class="tx-key">Amount</span><span class="tx-val green">0.001 USDC</span></div>
-          <div class="tx-row"><span class="tx-key">From</span><span class="tx-val">ResearchAgent-7</span></div>
-          <div class="tx-row"><span class="tx-key">To</span><span class="tx-val">Firecrawl API</span></div>
-          <div class="tx-row"><span class="tx-key">Network</span><span class="tx-val">Base — Block #12,847,991</span></div>
-          <div class="tx-row"><span class="tx-key">Latency</span><span class="tx-val">0.8s</span></div>
-          <div class="tx-row"><span class="tx-key">New Balance</span><span class="tx-val green" id="newBalance">$12.399 USDC</span></div>
-        </div>
-      </div>
-
-      <!-- Developer Notification — you were never asked -->
-      <div class="card dev-notify" id="devNotifyCard" style="display:none">
-        <div class="dev-notify-header">
-          <div class="dev-notify-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Payment Execution Log
           </div>
-          <div>
-            <div class="dev-notify-title">Your agent completed its task</div>
-            <div class="dev-notify-sub">You were never asked to approve</div>
+          <div class="log-terminal" id="s2log">
+            <div class="log-empty" id="s2logEmpty">Waiting for agent to execute task…</div>
+            <div id="s2logLines"></div>
+            <span class="cursor" id="s2cursor" style="display:none"></span>
           </div>
         </div>
-        <div class="dev-notify-body">
+
+        <div class="card" id="s2txWrap" style="display:none">
+          <div class="card-title" style="color:var(--green)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Transaction Settled
+          </div>
+          <div class="tx-card visible">
+            <div class="tx-row"><span class="tx-key">Txn ID</span><span class="tx-val accent">TXN-8842</span></div>
+            <div class="tx-row"><span class="tx-key">Amount</span><span class="tx-val green">0.001 USDC</span></div>
+            <div class="tx-row"><span class="tx-key">From</span><span class="tx-val">ResearchAgent-7 (0x4f3a…d291)</span></div>
+            <div class="tx-row"><span class="tx-key">To</span><span class="tx-val">Firecrawl API (0x9b2c…8f41)</span></div>
+            <div class="tx-row"><span class="tx-key">Protocol</span><span class="tx-val">x402/v2 — EIP-3009</span></div>
+            <div class="tx-row"><span class="tx-key">Network</span><span class="tx-val">Base — Block #12,847,991</span></div>
+            <div class="tx-row"><span class="tx-key">Latency</span><span class="tx-val">0.8s</span></div>
+            <div class="tx-row"><span class="tx-key">New Balance</span><span class="tx-val green">$49.999 USDC</span></div>
+          </div>
+        </div>
+
+        <div class="notify-card" id="s2notify" style="display:none">
+          <div class="notify-header">
+            <div class="notify-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600">Your agent completed its task</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:1px">You were never asked to approve</div>
+            </div>
+          </div>
+          <div class="notify-body">
 ResearchAgent-7  →  GET /v1/scrape on Firecrawl
-$0.001 USDC spent  ·  within your $5.00 daily limit
+$0.001 USDC spent  ·  within your $10.00 daily limit
 TXN-8842  ·  0.8s  ·  policy enforced automatically
-        </div>
-        <div class="dev-notify-footer">
-          Fund once. Set your rules. Your agent handles the rest. →
+          </div>
+          <div class="notify-foot">Fund once. Set your rules. Your agent handles the rest. →</div>
         </div>
       </div>
 
+      <!-- Merchant side -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          Merchant Side — Firecrawl API
+        </div>
+
+        <div class="idle-ph" id="s2merchantIdle">
+          <div class="idle-ph-icon">🏪</div>
+          <div class="idle-ph-text">Merchant dashboard activates when agent hits 402 and Pooly completes payment</div>
+        </div>
+
+        <div class="card" id="s2incomingCard" style="display:none">
+          <div class="card-title">Incoming Agent Request</div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11.5px;font-family:var(--mono)">
+            <span style="color:var(--text3)">Agent</span><span>ResearchAgent-7</span>
+            <span style="color:var(--text3)">ANS Name</span><span style="color:var(--accent);font-size:10px">mcp://research-agent.analysis.acme.v1.0</span>
+            <span style="color:var(--text3)">Operator</span><span>developer@acme.com</span>
+            <span style="color:var(--text3)">Protocol</span><span style="color:var(--teal)">x402/v2 — EIP-3009</span>
+            <span style="color:var(--text3)">Endpoint</span><span>GET /v1/scrape</span>
+            <span style="color:var(--text3)">Amount</span><span style="color:var(--green)">0.001 USDC</span>
+          </div>
+        </div>
+
+        <div class="card" id="s2verifyCard" style="display:none">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Agent Identity Verification
+          </div>
+          <div class="checklist" id="s2checklist">
+            <div class="check-item" id="s2c1"><div class="check-icon" id="s2ci1">·</div><div><div class="check-text">ANS resolved</div><div class="check-meta" id="s2cm1"></div></div></div>
+            <div class="check-item" id="s2c2"><div class="check-icon" id="s2ci2">·</div><div><div class="check-text">ERC-8004 identity verified</div><div class="check-meta" id="s2cm2"></div></div></div>
+            <div class="check-item" id="s2c3"><div class="check-icon" id="s2ci3">·</div><div><div class="check-text">Reputation score</div><div class="check-meta" id="s2cm3"></div></div></div>
+            <div class="check-item" id="s2c4"><div class="check-icon" id="s2ci4">·</div><div><div class="check-text">Spend pattern — normal</div><div class="check-meta" id="s2cm4"></div></div></div>
+            <div class="check-item" id="s2c5"><div class="check-icon" id="s2ci5">·</div><div><div class="check-text">Wallet balance sufficient</div><div class="check-meta" id="s2cm5"></div></div></div>
+            <div class="check-item" id="s2c6"><div class="check-icon" id="s2ci6">·</div><div><div class="check-text">Blacklist / fraud check</div><div class="check-meta" id="s2cm6"></div></div></div>
+          </div>
+          <div class="verify-result" id="s2verifyResult">✅ Agent verified — payment accepted</div>
+        </div>
+
+        <div class="card sys-card" id="s2crmCard" style="display:none">
+          <div class="card-title">CRM Record — Auto-Created</div>
+          <div class="sys-header">
+            <div class="sys-logo hubspot">HubSpot</div>
+            <div class="sys-event green">✦ Deal Created</div>
+            <div class="sim-badge">simulated</div>
+          </div>
+          <div class="sys-fields">
+            <div class="sys-field"><span class="sf-key">Contact</span><span class="sf-val">ResearchAgent-7 (acme.com)</span></div>
+            <div class="sys-field"><span class="sf-key">Amount</span><span class="sf-val green">$0.001 USDC</span></div>
+            <div class="sys-field"><span class="sf-key">Deal Stage</span><span class="sf-val">Closed Won</span></div>
+            <div class="sys-field"><span class="sf-key">Source</span><span class="sf-val">Pooly Agent Payment</span></div>
+            <div class="sys-field"><span class="sf-key">Txn ID</span><span class="sf-val accent">TXN-8842</span></div>
+            <div class="sys-field"><span class="sf-key">Auto-created</span><span class="sf-val green">✓</span></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Merchant Side -->
-    <div class="panel panel-merchant" id="panelMerchant">
-      <div class="panel-label">
-        <svg style="display:inline;vertical-align:middle;margin-right:4px" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Merchant Side — ICP-B: Firecrawl API
-      </div>
-
-      <!-- Idle state -->
-      <div class="idle-placeholder" id="merchantIdle">
-        <div class="idle-icon">🏪</div>
-        <div class="idle-text">Merchant dashboard activates after agent payment</div>
-      </div>
-
-      <!-- Incoming Request -->
-      <div class="card" id="incomingCard" style="display:none">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.61 19.79 19.79 0 01.1 1.1 2 2 0 012.08.9h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.05a16 16 0 006.04 6.04l1.42-1.42a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-          Incoming Agent Request
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;font-family:var(--mono)">
-          <div style="color:var(--text3)">Agent</div><div style="color:var(--text)">ResearchAgent-7</div>
-          <div style="color:var(--text3)">Operator</div><div style="color:var(--text)">developer@acme.com</div>
-          <div style="color:var(--text3)">Protocol</div><div style="color:var(--accent)">x402 / ERC-8004</div>
-          <div style="color:var(--text3)">Endpoint</div><div style="color:var(--text)">GET /v1/scrape</div>
-          <div style="color:var(--text3)">Amount</div><div style="color:var(--green)">0.001 USDC</div>
-        </div>
-      </div>
-
-      <!-- Verification Checklist -->
-      <div class="card" id="verifyCard" style="display:none">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Agent Identity Verification
-        </div>
-        <div class="checklist" id="checklist">
-          <div class="check-item" id="c1">
-            <div class="check-icon" id="ci1">·</div>
-            <div class="check-text">ERC-8004 identity resolved</div>
-            <div class="check-meta" id="cm1"></div>
-          </div>
-          <div class="check-item" id="c2">
-            <div class="check-icon" id="ci2">·</div>
-            <div class="check-text">Reputation score</div>
-            <div class="check-meta" id="cm2"></div>
-          </div>
-          <div class="check-item" id="c3">
-            <div class="check-icon" id="ci3">·</div>
-            <div class="check-text">Spend pattern analysis</div>
-            <div class="check-meta" id="cm3"></div>
-          </div>
-          <div class="check-item" id="c4">
-            <div class="check-icon" id="ci4">·</div>
-            <div class="check-text">Wallet balance check</div>
-            <div class="check-meta" id="cm4"></div>
-          </div>
-          <div class="check-item" id="c5">
-            <div class="check-icon" id="ci5">·</div>
-            <div class="check-text">Blacklist / fraud check</div>
-            <div class="check-meta" id="cm5"></div>
-          </div>
-        </div>
-        <div id="verifyResult" style="margin-top:12px;display:none;padding:10px 12px;border-radius:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);font-size:13px;font-weight:600;color:var(--green)">
-          ✅ Agent verified — payment accepted
-        </div>
-      </div>
-
-      <!-- CRM Record -->
-      <div class="card crm-card" id="crmCard" style="display:none">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
-          CRM Record — Auto-Created
-        </div>
-        <div class="crm-header">
-          <div class="crm-logo">HubSpot</div>
-          <div class="crm-event">✦ Deal Created</div>
-          <div class="sim-badge">simulated</div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px">
-          <div class="crm-field"><span class="crm-key">Contact</span><span class="crm-val">ResearchAgent-7 (acme.com)</span></div>
-          <div class="crm-field"><span class="crm-key">Amount</span><span class="crm-val green">$0.001 USDC</span></div>
-          <div class="crm-field"><span class="crm-key">Deal Stage</span><span class="crm-val">Closed Won</span></div>
-          <div class="crm-field"><span class="crm-key">Source</span><span class="crm-val">Pooly Agent Payment</span></div>
-          <div class="crm-field"><span class="crm-key">Txn ID</span><span class="crm-val">TXN-8842</span></div>
-          <div class="crm-field"><span class="crm-key">Auto-created</span><span class="crm-val green">✓</span></div>
-        </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.5">
-          Payment data routed into HubSpot via Pooly CRM connector. Supports Salesforce, SAP, NetSuite.
-        </div>
-      </div>
-
+    <div class="summary-bar" id="s2summary">
+      <div class="summary-stat"><div class="summary-val">0.001 USDC</div><div class="summary-label">Settled</div></div>
+      <div class="summary-stat"><div class="summary-val">0.8s</div><div class="summary-label">Total Latency</div></div>
+      <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">Humans Involved</div></div>
+      <div class="summary-stat"><div class="summary-val">✓</div><div class="summary-label">Agent Verified</div></div>
+      <button class="btn btn-ghost" onclick="resetCurrent()" style="font-size:11px">↺ Reset</button>
+      <button class="btn btn-primary next-btn visible" onclick="switchScene(3)" style="font-size:11px">Scene 3: Data Purchase →</button>
     </div>
   </div>
 
-  <!-- Summary Bar -->
-  <div class="summary-bar" id="summaryBar">
-    <div class="summary-stat"><div class="summary-val">0.001 USDC</div><div class="summary-label">Amount Settled</div></div>
-    <div class="summary-stat"><div class="summary-val">0.8s</div><div class="summary-label">Total Latency</div></div>
-    <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">Humans Involved</div></div>
-    <div class="summary-stat"><div class="summary-val">✓</div><div class="summary-label">Agent Verified</div></div>
-    <div class="summary-stat"><div class="summary-val">✓</div><div class="summary-label">CRM Record Created</div></div>
-    <button class="btn btn-ghost" onclick="resetDemo()" style="margin-left:8px;font-size:12px">↺ Run again</button>
+  <!-- ══════════════════════════════════════════════════════
+       SCENE 3 — DATA PURCHASE
+  ══════════════════════════════════════════════════════ -->
+  <div class="scene" id="scene3">
+    <div class="scene-body">
+      <!-- Left: Agent log -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Agent — Research Task
+        </div>
+
+        <div class="card" style="background:rgba(108,108,255,0.04);border-color:rgba(108,108,255,0.2)">
+          <div class="card-title" style="color:var(--accent)">Task Received</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.5">
+            "Analyze AI agent payments market size — Q1 2026 data required"
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--mono)">Assigned by: developer@acme.com · Agent: ResearchAgent-7</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Execution Log
+          </div>
+          <div class="log-terminal" id="s3log">
+            <div class="log-empty" id="s3logEmpty">Waiting for agent task to run…</div>
+            <div id="s3logLines"></div>
+            <span class="cursor" id="s3cursor" style="display:none"></span>
+          </div>
+        </div>
+
+        <div class="finding-box" id="s3finding" style="display:none">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--accent);margin-bottom:7px;font-family:var(--mono)">Agent Finding</div>
+          <div id="s3findingText" style="font-size:13px;line-height:1.6"></div>
+          <div style="margin-top:8px;font-size:10.5px;color:var(--text3);font-family:var(--mono)">Cost: $0.05 USDC · TXN-8843 · 6.5s</div>
+        </div>
+      </div>
+
+      <!-- Right: Data payload -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+          DataStream API — Dataset Response
+        </div>
+
+        <div class="idle-ph" id="s3idle">
+          <div class="idle-ph-icon">📊</div>
+          <div class="idle-ph-text">Dataset received after payment — JSON payload will appear here</div>
+        </div>
+
+        <div class="card" id="s3dataCard" style="display:none">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Dataset: ai-payments-q1-2026
+            <div class="sim-badge" style="margin-left:auto">simulated</div>
+          </div>
+          <div class="data-panel" id="s3json">
+<span class="t-obj">{</span>
+  <span class="dp-key">"dataset"</span><span class="t-op">:</span> <span class="dp-str">"ai-payments-q1-2026"</span><span class="t-op">,</span>
+  <span class="dp-key">"generated"</span><span class="t-op">:</span> <span class="dp-str">"2026-04-01"</span><span class="t-op">,</span>
+  <span class="dp-key">"market_size_usd"</span><span class="t-op">:</span> <span class="dp-str">"$2.4B"</span><span class="t-op">,</span>
+  <span class="dp-key">"yoy_growth_pct"</span><span class="t-op">:</span> <span class="dp-num">340</span><span class="t-op">,</span>
+  <span class="dp-key">"top_protocols"</span><span class="t-op">:</span> <span class="dp-arr">["x402", "ERC-8183", "USDC"]</span><span class="t-op">,</span>
+  <span class="dp-key">"agent_payment_volume"</span><span class="t-op">:</span> <span class="dp-str">"$847M"</span><span class="t-op">,</span>
+  <span class="dp-key">"avg_payment_size_usd"</span><span class="t-op">:</span> <span class="dp-num">0.003</span><span class="t-op">,</span>
+  <span class="dp-key">"top_use_cases"</span><span class="t-op">:</span> <span class="dp-arr">["api-access", "data-purchase", "compute"]</span><span class="t-op">,</span>
+  <span class="dp-key">"licensed_to"</span><span class="t-op">:</span> <span class="dp-str">"mcp://research-agent.analysis.acme.v1.0"</span><span class="t-op">,</span>
+  <span class="dp-key">"license_type"</span><span class="t-op">:</span> <span class="dp-str">"single-agent-use"</span>
+<span class="t-obj">}</span>
+          </div>
+        </div>
+
+        <div class="card" id="s3txCard" style="display:none">
+          <div class="card-title" style="color:var(--green)">Transaction Settled</div>
+          <div class="tx-card visible">
+            <div class="tx-row"><span class="tx-key">Txn ID</span><span class="tx-val accent">TXN-8843</span></div>
+            <div class="tx-row"><span class="tx-key">Amount</span><span class="tx-val green">0.05 USDC</span></div>
+            <div class="tx-row"><span class="tx-key">From</span><span class="tx-val">ResearchAgent-7</span></div>
+            <div class="tx-row"><span class="tx-key">To</span><span class="tx-val">DataStream API (0x7c9f…3a81)</span></div>
+            <div class="tx-row"><span class="tx-key">License</span><span class="tx-val">single-agent-use</span></div>
+            <div class="tx-row"><span class="tx-key">Network</span><span class="tx-val">Base — Block #12,847,993</span></div>
+            <div class="tx-row"><span class="tx-key">New Balance</span><span class="tx-val green">$49.950 USDC</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-bar" id="s3summary">
+      <div class="summary-stat"><div class="summary-val">0.05 USDC</div><div class="summary-label">Data Cost</div></div>
+      <div class="summary-stat"><div class="summary-val">6.5s</div><div class="summary-label">Task Time</div></div>
+      <div class="summary-stat"><div class="summary-val">847</div><div class="summary-label">Data Points</div></div>
+      <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">Human Approvals</div></div>
+      <button class="btn btn-ghost" onclick="resetCurrent()" style="font-size:11px">↺ Reset</button>
+      <button class="btn btn-primary next-btn visible" onclick="switchScene(4)" style="font-size:11px">Scene 4: Task Escrow →</button>
+    </div>
   </div>
 
-  <!-- CTA Banner — appears after demo completes -->
-  <div class="cta-bar" id="ctaBar">
-    <div class="cta-heading">This is what autonomous payments look like.</div>
-    <div class="cta-sub">Get early access — we're onboarding agent builders and merchants now.</div>
-    <div class="cta-actions">
-      <a class="btn-cta" href="https://pooly.ai/waitlist" target="_blank" rel="noopener">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        Join the Waitlist
-      </a>
-      <button class="btn-share" onclick="copyDemoLink()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        Copy demo link
-      </button>
-      <button class="btn btn-ghost" onclick="resetDemo()" style="font-size:12px">↺ Run again</button>
+  <!-- ══════════════════════════════════════════════════════
+       SCENE 4 — TASK ESCROW (ERC-8183)
+  ══════════════════════════════════════════════════════ -->
+  <div class="scene" id="scene4">
+    <div class="scene-body">
+
+      <!-- Left: Agent log -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+          Client Agent — ResearchAgent-7
+        </div>
+
+        <div class="card" style="background:rgba(108,108,255,0.04);border-color:rgba(108,108,255,0.2)">
+          <div class="card-title" style="color:var(--accent)">Task</div>
+          <div style="font-size:13px;color:var(--text)">Analyze image batch — 400 product images for anomaly detection</div>
+          <div style="margin-top:7px;font-size:11px;color:var(--text3);font-family:var(--mono)">Requires GPU — outsourcing to provider network</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Agent Log</div>
+          <div class="log-terminal" id="s4agentLog">
+            <div class="log-empty" id="s4agentLogEmpty">Waiting for agent to create escrow…</div>
+            <div id="s4agentLogLines"></div>
+          </div>
+        </div>
+
+        <div class="tx-card" id="s4agentResult" style="display:none;margin-top:4px">
+          <div class="tx-row"><span class="tx-key">Job Result</span><span class="tx-val green">Received ✓</span></div>
+          <div class="tx-row"><span class="tx-key">Objects Detected</span><span class="tx-val">12,480</span></div>
+          <div class="tx-row"><span class="tx-key">Avg Confidence</span><span class="tx-val green">94.2%</span></div>
+          <div class="tx-row"><span class="tx-key">Anomalies Found</span><span class="tx-val" style="color:var(--yellow)">7</span></div>
+          <div class="tx-row"><span class="tx-key">Processing Time</span><span class="tx-val">3.18s</span></div>
+          <div class="tx-row"><span class="tx-key">Total Cost</span><span class="tx-val green">10 USDC (settled)</span></div>
+        </div>
+      </div>
+
+      <!-- Right: Escrow + Provider -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          ERC-8183 Escrow · Provider
+        </div>
+
+        <div class="card" id="s4escrowCard">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            ERC-8183 Escrow Contract
+          </div>
+          <div class="escrow-states" id="s4states">
+            <div class="es-state" id="es_open">Open</div>
+            <div class="es-arrow">›</div>
+            <div class="es-state" id="es_funded">Funded</div>
+            <div class="es-arrow">›</div>
+            <div class="es-state" id="es_accepted">Accepted</div>
+            <div class="es-arrow">›</div>
+            <div class="es-state" id="es_executing">Executing</div>
+            <div class="es-arrow">›</div>
+            <div class="es-state" id="es_submitted">Submitted</div>
+            <div class="es-arrow">›</div>
+            <div class="es-state" id="es_completed">Completed</div>
+          </div>
+          <div class="log-terminal" id="s4escrowLog" style="min-height:100px">
+            <div class="log-empty" id="s4escrowLogEmpty">Escrow contract idle…</div>
+            <div id="s4escrowLogLines"></div>
+          </div>
+        </div>
+
+        <div class="card" id="s4providerCard">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Provider — VisionProvider-3
+          </div>
+          <div class="log-terminal" id="s4providerLog" style="min-height:80px">
+            <div class="log-empty" id="s4providerLogEmpty">Waiting for job broadcast…</div>
+            <div id="s4providerLogLines"></div>
+          </div>
+        </div>
+
+        <div class="card success" id="s4payoutCard" style="display:none">
+          <div class="card-title" style="color:var(--green)">Escrow Released</div>
+          <div class="tx-card visible">
+            <div class="tx-row"><span class="tx-key">Job ID</span><span class="tx-val accent">JOB-2241</span></div>
+            <div class="tx-row"><span class="tx-key">Evaluator</span><span class="tx-val">Pooly ZK Circuit v2</span></div>
+            <div class="tx-row"><span class="tx-key">Verdict</span><span class="tx-val green">PASS — result verified</span></div>
+            <div class="tx-row"><span class="tx-key">Provider Payout</span><span class="tx-val green">9.500 USDC → VisionProvider-3</span></div>
+            <div class="tx-row"><span class="tx-key">Pooly Fee</span><span class="tx-val">0.500 USDC (5%)</span></div>
+            <div class="tx-row"><span class="tx-key">Network</span><span class="tx-val">Base — Block #12,847,997</span></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="copied-hint" id="copiedHint">Link copied to clipboard ✓</div>
+
+    <div class="summary-bar" id="s4summary">
+      <div class="summary-stat"><div class="summary-val">10 USDC</div><div class="summary-label">Job Value</div></div>
+      <div class="summary-stat"><div class="summary-val">3.18s</div><div class="summary-label">Execution Time</div></div>
+      <div class="summary-stat"><div class="summary-val">ZK</div><div class="summary-label">Verification</div></div>
+      <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">Human Arbiters</div></div>
+      <button class="btn btn-ghost" onclick="resetCurrent()" style="font-size:11px">↺ Reset</button>
+      <button class="btn btn-primary next-btn visible" onclick="switchScene(5)" style="font-size:11px">Scene 5: Merchant View →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCENE 5 — MERCHANT VIEW (FULL STACK)
+  ══════════════════════════════════════════════════════ -->
+  <div class="scene" id="scene5">
+    <div class="scene-body">
+
+      <!-- Left: Incoming + verification -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Identity &amp; Verification
+        </div>
+
+        <div class="card">
+          <div class="card-title">Incoming Agent Request</div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11.5px;font-family:var(--mono)">
+            <span style="color:var(--text3)">ANS Name</span><span style="color:var(--accent);font-size:10px">mcp://research-agent.analysis.acme.v1.0</span>
+            <span style="color:var(--text3)">Operator</span><span>developer@acme.com (KYB ✓)</span>
+            <span style="color:var(--text3)">Protocol</span><span style="color:var(--teal)">x402/v2 — EIP-3009</span>
+            <span style="color:var(--text3)">Endpoint</span><span>GET /v1/scrape</span>
+            <span style="color:var(--text3)">Amount</span><span style="color:var(--green)">0.001 USDC on Base</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            6-Step Agent Verification
+          </div>
+          <div class="checklist" id="s5checklist">
+            <div class="check-item" id="s5c1"><div class="check-icon" id="s5ci1">·</div><div><div class="check-text">ANS resolution</div><div class="check-meta" id="s5cm1"></div></div></div>
+            <div class="check-item" id="s5c2"><div class="check-icon" id="s5ci2">·</div><div><div class="check-text">ERC-8004 identity</div><div class="check-meta" id="s5cm2"></div></div></div>
+            <div class="check-item" id="s5c3"><div class="check-icon" id="s5ci3">·</div><div><div class="check-text">Reputation score</div><div class="check-meta" id="s5cm3"></div></div></div>
+            <div class="check-item" id="s5c4"><div class="check-icon" id="s5ci4">·</div><div><div class="check-text">Spend pattern analysis</div><div class="check-meta" id="s5cm4"></div></div></div>
+            <div class="check-item" id="s5c5"><div class="check-icon" id="s5ci5">·</div><div><div class="check-text">Wallet balance check</div><div class="check-meta" id="s5cm5"></div></div></div>
+            <div class="check-item" id="s5c6"><div class="check-icon" id="s5ci6">·</div><div><div class="check-text">Blacklist / OFAC check</div><div class="check-meta" id="s5cm6"></div></div></div>
+          </div>
+          <div class="verify-result" id="s5verifyResult">✅ Agent verified — accepting payment</div>
+        </div>
+
+        <div class="card success" id="s5settlementCard" style="display:none">
+          <div class="card-title" style="color:var(--green)">Payment Settled</div>
+          <div class="tx-card visible">
+            <div class="tx-row"><span class="tx-key">Txn ID</span><span class="tx-val accent">TXN-8842</span></div>
+            <div class="tx-row"><span class="tx-key">Amount</span><span class="tx-val green">0.001 USDC</span></div>
+            <div class="tx-row"><span class="tx-key">From</span><span class="tx-val">ResearchAgent-7 (0x4f3a…d291)</span></div>
+            <div class="tx-row"><span class="tx-key">Protocol</span><span class="tx-val">EIP-3009 via Pooly Facilitator</span></div>
+            <div class="tx-row"><span class="tx-key">Block</span><span class="tx-val">Base #12,847,991 — 0.8s</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Business systems -->
+      <div class="col">
+        <div class="col-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+          Business Systems — Auto-Updated
+        </div>
+
+        <div class="idle-ph" id="s5idle">
+          <div class="idle-ph-icon">🔄</div>
+          <div class="idle-ph-text">CRM, ERP, and webhook records auto-created after payment — no integration code required</div>
+        </div>
+
+        <!-- HubSpot CRM -->
+        <div class="card sys-card" id="s5crm" style="display:none">
+          <div class="sys-header">
+            <div class="sys-logo hubspot">HubSpot</div>
+            <div class="sys-event green">✦ Deal Created</div>
+            <div class="sim-badge">simulated</div>
+          </div>
+          <div class="sys-fields">
+            <div class="sys-field"><span class="sf-key">Contact</span><span class="sf-val">ResearchAgent-7 (acme.com)</span></div>
+            <div class="sys-field"><span class="sf-key">Amount</span><span class="sf-val green">$0.001 USDC</span></div>
+            <div class="sys-field"><span class="sf-key">Deal Stage</span><span class="sf-val">Closed Won</span></div>
+            <div class="sys-field"><span class="sf-key">Source</span><span class="sf-val">Pooly Agent Payment</span></div>
+            <div class="sys-field"><span class="sf-key">Txn ID</span><span class="sf-val accent">TXN-8842</span></div>
+            <div class="sys-field"><span class="sf-key">Auto-created</span><span class="sf-val green">✓ — Pooly CRM Connector</span></div>
+          </div>
+        </div>
+
+        <!-- NetSuite ERP -->
+        <div class="card sys-card" id="s5erp" style="display:none">
+          <div class="sys-header">
+            <div class="sys-logo netsuite">NetSuite</div>
+            <div class="sys-event blue">✦ Invoice Created</div>
+            <div class="sim-badge">simulated</div>
+          </div>
+          <div class="sys-fields">
+            <div class="sys-field"><span class="sf-key">Invoice #</span><span class="sf-val accent">INV-28491</span></div>
+            <div class="sys-field"><span class="sf-key">Customer</span><span class="sf-val">acme.com · ResearchAgent-7</span></div>
+            <div class="sys-field"><span class="sf-key">Line Item</span><span class="sf-val">API Access — GET /v1/scrape</span></div>
+            <div class="sys-field"><span class="sf-key">Amount</span><span class="sf-val green">$0.001 USDC</span></div>
+            <div class="sys-field"><span class="sf-key">Posted</span><span class="sf-val">2026-04-05</span></div>
+            <div class="sys-field"><span class="sf-key">Auto-created</span><span class="sf-val green">✓ — Pooly ERP Connector</span></div>
+          </div>
+        </div>
+
+        <!-- Webhook -->
+        <div class="card sys-card" id="s5webhook" style="display:none">
+          <div class="sys-header">
+            <div class="sys-logo webhook">Webhook</div>
+            <div class="sys-event purple">✦ Event Dispatched</div>
+          </div>
+          <div class="sys-fields">
+            <div class="sys-field"><span class="sf-key">Event</span><span class="sf-val">payment.settled</span></div>
+            <div class="sys-field"><span class="sf-key">Endpoint</span><span class="sf-val" style="font-size:10px">POST https://api.firecrawl.dev/webhooks/pooly</span></div>
+            <div class="sys-field"><span class="sf-key">Response</span><span class="sf-val green">200 OK — 42ms</span></div>
+            <div class="sys-field"><span class="sf-key">Payload</span><span class="sf-val" style="font-size:10px">txn: TXN-8842 · amount: 0.001 · agent: research-agent-7</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-bar" id="s5summary">
+      <div class="summary-stat"><div class="summary-val">6</div><div class="summary-label">Checks Passed</div></div>
+      <div class="summary-stat"><div class="summary-val">3</div><div class="summary-label">Systems Updated</div></div>
+      <div class="summary-stat"><div class="summary-val">0.8s</div><div class="summary-label">Settlement</div></div>
+      <div class="summary-stat"><div class="summary-val">0</div><div class="summary-label">API Keys Written</div></div>
+      <button class="btn btn-ghost" onclick="resetCurrent()" style="font-size:11px">↺ Reset</button>
+    </div>
+
+    <!-- CTA — shown after scene 5 completes -->
+    <div class="cta-bar" id="ctaBar">
+      <div class="cta-heading">This is what the agent economy looks like.</div>
+      <div class="cta-sub">Wallet setup to CRM record — zero humans, zero integration code. Join the waitlist.</div>
+      <div class="cta-actions">
+        <a class="btn-cta" href="https://pooly.ai/waitlist" target="_blank" rel="noopener">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Join the Waitlist
+        </a>
+        <button class="btn-share" onclick="copyDemoLink()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Copy demo link
+        </button>
+        <button class="btn btn-ghost" onclick="switchScene(1);resetAll()" style="font-size:11px">↺ Run from start</button>
+      </div>
+      <div class="copied-hint" id="copiedHint">Link copied to clipboard ✓</div>
+    </div>
   </div>
 
 </div>
 
 <script>
-  // Log sequence — each entry: [delay_ms, class, text]
-  const LOG_SEQUENCE = [
-    [0,    'req',    '→ GET https://api.firecrawl.dev/v1/scrape'],
-    [900,  'blank',  ''],
-    [900,  'res-err','← HTTP 402 Payment Required'],
-    [1100, 'info',   '  X-Payment-Required: USDC 0.001 on Base'],
-    [1300, 'info',   '  X-Payment-Address: 0x9b2c…8f41'],
-    [1300, 'info',   '  X-Payment-Protocol: EIP-3009 transferWithAuthorization'],
-    [1600, 'blank',  ''],
-    [1600, 'action', '⚡ Pooly intercepting — checking developer policy…'],
-    [2000, 'check',  '✓ Daily limit: $0.001 of $5.00 used  (developer@acme.com)'],
-    [2300, 'check',  '✓ Merchant cap: $0.001 within $2.00 per-tx rule'],
-    [2500, 'check',  '✓ No human approval required — agent authorized'],
-    [2800, 'check',  '✓ Signing EIP-3009 authorization…'],
-    [3000, 'blank',  ''],
-    [3000, 'req',    '→ POST https://api.firecrawl.dev/v1/scrape'],
-    [3000, 'info',   '  Authorization: Bearer eyJhbGciOiJFUzI1…'],
-    [3000, 'info',   '  X-Payment-Proof: 0x7f3a4b…c291'],
-    [3800, 'blank',  ''],
-    [3800, 'res-ok', '← HTTP 200 OK  ✅  Scrape complete. 0.8s total.'],
-  ];
+// ── State ────────────────────────────────────────────
+let currentScene = 1;
+let sceneStates = { 1:'idle', 2:'idle', 3:'idle', 4:'idle', 5:'idle' };
+let timers = [];
 
-  // Checklist items: [delay_after_merchant_start, icon, meta]
-  const CHECKS = [
-    [300,  '✓', 'resolved'],
-    [700,  '✓', '94 / 100 · 847 prior txns'],
-    [1100, '✓', 'normal — no anomalies'],
-    [1500, '✓', '$12.40 USDC — sufficient'],
-    [1900, '✓', 'clear'],
-  ];
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+function delay(fn, ms) { const t = setTimeout(fn, ms); timers.push(t); return t; }
 
-  let running = false;
-  let activeTab = 'agent';
+// ── Navigation ───────────────────────────────────────
+function switchScene(n) {
+  document.getElementById('scene' + currentScene).classList.remove('active');
+  document.getElementById('stab' + currentScene).classList.remove('active');
+  currentScene = n;
+  document.getElementById('scene' + n).classList.add('active');
+  document.getElementById('stab' + n).classList.add('active');
+  updateRunBtn();
+}
 
-  function isMobile() { return window.innerWidth <= 768; }
-
-  function switchTab(tab) {
-    activeTab = tab;
-    document.getElementById('panelAgent').classList.toggle('tab-active', tab === 'agent');
-    document.getElementById('panelMerchant').classList.toggle('tab-active', tab === 'merchant');
-    document.getElementById('tabAgent').classList.toggle('active', tab === 'agent');
-    document.getElementById('tabMerchant').classList.toggle('active', tab === 'merchant');
+function updateRunBtn() {
+  const s = sceneStates[currentScene];
+  const runBtn = document.getElementById('globalRunBtn');
+  const resetBtn = document.getElementById('globalResetBtn');
+  if (s === 'idle') {
+    runBtn.style.display = ''; runBtn.disabled = false;
+    resetBtn.style.display = 'none';
+  } else if (s === 'running') {
+    runBtn.disabled = true;
+    resetBtn.style.display = '';
+  } else {
+    runBtn.style.display = 'none';
+    resetBtn.style.display = '';
   }
+}
 
-  function setStep(n, state) {
-    const el = document.getElementById('step' + n);
+function runCurrent() { runScene(currentScene); }
+function resetCurrent() { resetScene(currentScene); }
+function resetAll() { [1,2,3,4,5].forEach(resetScene); }
+
+function setSceneState(n, s) {
+  sceneStates[n] = s;
+  if (n === currentScene) updateRunBtn();
+  if (s === 'done') {
+    document.getElementById('stab' + n).classList.add('done');
+    document.getElementById('tnum' + n).textContent = '✓';
+  }
+}
+
+// ── Log helpers ──────────────────────────────────────
+function appendLog(containerId, cls, text) {
+  const container = document.getElementById(containerId);
+  const line = document.createElement('div');
+  line.className = 'log-line ' + cls;
+  line.innerHTML = text;
+  container.appendChild(line);
+  requestAnimationFrame(() => { requestAnimationFrame(() => line.classList.add('visible')); });
+  // scroll parent
+  const terminal = container.closest('.log-terminal');
+  if (terminal) terminal.scrollTop = terminal.scrollHeight;
+}
+
+function showEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = '';
+}
+function hideEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+function addVis(id) {
+  const el = document.getElementById(id);
+  if (el) { el.style.display = ''; requestAnimationFrame(() => el.classList.add('visible')); }
+}
+
+// ── SCENE 1 ──────────────────────────────────────────
+function runScene(n) {
+  if (n === 1) runScene1();
+  else if (n === 2) runScene2();
+  else if (n === 3) runScene3();
+  else if (n === 4) runScene4();
+  else if (n === 5) runScene5();
+}
+
+function runScene1() {
+  setSceneState(1, 'running');
+  hideEl('s1logEmpty');
+  const lines = document.querySelectorAll('#code1a .cb-line');
+  lines.forEach((l, i) => delay(() => l.classList.add('visible'), i * 140));
+
+  // API log
+  const L = 'S1';
+  delay(() => appendLog('s1logLines', 'll-action', '⚡ Initializing Pooly SDK…'), 800);
+  delay(() => appendLog('s1logLines', 'll-req',    '→ POST /v1/wallets'), 1400);
+
+  // wallet panel activates
+  delay(() => {
+    document.getElementById('s1dot').className = 'status-dot active';
+    document.getElementById('s1status').textContent = 'Creating…';
+    document.getElementById('w1network').textContent = 'Base';
+    document.getElementById('w1network').className = 'wf-value accent';
+  }, 1800);
+
+  delay(() => {
+    appendLog('s1logLines', 'll-check', '← 201 Created');
+    appendLog('s1logLines', 'll-dim', '   walletId: wal_4f3a…d291');
+    appendLog('s1logLines', 'll-dim', '   address:  0x4f3a…d291');
+    document.getElementById('w1addr').textContent = '0x4f3a…d291';
+    document.getElementById('w1addr').className = 'wf-value accent';
+    document.getElementById('w1balance').textContent = '$0.000 USDC';
+    document.getElementById('w1balance').className = 'wf-value dim';
+    document.getElementById('card1b').style.opacity = '1';
+    const lines2 = document.querySelectorAll('#code1b .cb-line');
+    lines2.forEach((l, i) => delay(() => l.classList.add('visible'), i * 110));
+  }, 2400);
+
+  // Topup
+  delay(() => appendLog('s1logLines', 'll-req', '→ POST /v1/wallets/wal_4f3a…/topup'), 3200);
+  delay(() => appendLog('s1logLines', 'll-info', '   Fiat on-ramp via Circle CCTP…'), 3700);
+  delay(() => {
+    appendLog('s1logLines', 'll-check', '← $50.00 USDC deposited — Block #12,847,880');
+    let bal = 0; const target = 50;
+    const tick = setInterval(() => {
+      bal = Math.min(bal + 2.5, target);
+      document.getElementById('w1balance').textContent = '$' + bal.toFixed(3) + ' USDC';
+      document.getElementById('w1balance').className = 'wf-value green';
+      if (bal >= target) clearInterval(tick);
+    }, 80);
+    document.getElementById('card1c').style.opacity = '1';
+    const lines3 = document.querySelectorAll('#code1c .cb-line');
+    lines3.forEach((l, i) => delay(() => l.classList.add('visible'), i * 100));
+  }, 4400);
+
+  // Limits
+  delay(() => appendLog('s1logLines', 'll-req', '→ PUT /v1/wallets/wal_4f3a…/spend-limits'), 5600);
+  delay(() => {
+    appendLog('s1logLines', 'll-check', '← limits set — policy active');
+    document.getElementById('w1daily').textContent = '$10.00 / day';
+    document.getElementById('w1daily').style.color = 'var(--text)';
+    document.getElementById('w1permerch').textContent = '$2.00 / tx';
+    document.getElementById('w1permerch').style.color = 'var(--text)';
+    document.getElementById('w1approval').textContent = 'None — autonomous';
+    document.getElementById('w1approval').style.color = 'var(--green)';
+  }, 6400);
+
+  // Identity
+  delay(() => appendLog('s1logLines', 'll-req', '→ POST /v1/agents/register'), 7000);
+  delay(() => {
+    appendLog('s1logLines', 'll-check', '← ERC-8004 NFT #1024 minted on Base');
+    appendLog('s1logLines', 'll-dim', '   ANS: mcp://research-agent.analysis.acme.v1.0');
+    document.getElementById('w1identity').textContent = 'ERC-8004 #1024';
+    document.getElementById('w1identity').className = 'wf-value green';
+    document.getElementById('s1dot').className = 'status-dot done';
+    document.getElementById('s1status').textContent = 'Active';
+  }, 7800);
+
+  // Notify
+  delay(() => {
+    document.getElementById('s1notify').style.display = '';
+    requestAnimationFrame(() => document.getElementById('s1notify').classList.add('visible'));
+    document.getElementById('s1summary').classList.add('visible');
+    setSceneState(1, 'done');
+  }, 9000);
+}
+
+function resetScene1() {
+  clearTimers();
+  setSceneState(1, 'idle');
+  document.getElementById('stab1').classList.remove('done');
+  document.getElementById('tnum1').textContent = '1';
+  document.getElementById('s1logEmpty').style.display = '';
+  document.getElementById('s1logLines').innerHTML = '';
+  document.getElementById('s1summary').classList.remove('visible');
+  document.getElementById('s1notify').classList.remove('visible');
+  document.getElementById('s1notify').style.display = 'none';
+  document.getElementById('card1b').style.opacity = '0';
+  document.getElementById('card1c').style.opacity = '0';
+  document.querySelectorAll('#code1a .cb-line, #code1b .cb-line, #code1c .cb-line').forEach(l => l.classList.remove('visible'));
+  document.getElementById('s1dot').className = 'status-dot idle';
+  document.getElementById('s1status').textContent = 'Idle';
+  document.getElementById('w1addr').textContent = '— pending'; document.getElementById('w1addr').className = 'wf-value dim';
+  document.getElementById('w1balance').textContent = '—'; document.getElementById('w1balance').className = 'wf-value dim';
+  document.getElementById('w1network').textContent = '—'; document.getElementById('w1network').className = 'wf-value dim';
+  document.getElementById('w1identity').textContent = '—'; document.getElementById('w1identity').className = 'wf-value dim';
+  document.getElementById('w1daily').textContent = '—'; document.getElementById('w1daily').style.color = 'var(--text3)';
+  document.getElementById('w1permerch').textContent = '—'; document.getElementById('w1permerch').style.color = 'var(--text3)';
+  document.getElementById('w1approval').textContent = '—'; document.getElementById('w1approval').style.color = 'var(--text3)';
+  updateRunBtn();
+}
+
+// ── SCENE 2 ──────────────────────────────────────────
+const S2_LOG = [
+  [0,    'll-req',    '→ GET https://api.firecrawl.dev/v1/scrape'],
+  [100,  'll-dim',    '   User-Agent: mcp://research-agent.analysis.acme.v1.0'],
+  [950,  'll-blank',  ''],
+  [960,  'll-res-err','← HTTP 402 Payment Required'],
+  [1060, 'll-dim',    '   X-Payment-Required: USDC 0.001 on Base'],
+  [1160, 'll-dim',    '   X-Payment-Address:  0x9b2c…8f41'],
+  [1260, 'll-dim',    '   X-Payment-Protocol: x402/v2'],
+  [1360, 'll-dim',    '   X-Accepts: EIP-3009, Permit2'],
+  [1500, 'll-blank',  ''],
+  [1510, 'll-action', '⚡ Pooly intercepting x402 response…'],
+  [1800, 'll-check',  '✓ Spend: $0.001 < daily limit ($10.00) — OK'],
+  [2100, 'll-check',  '✓ Merchant: Firecrawl API — verified (rep: 99/100)'],
+  [2400, 'll-check',  '✓ Per-merchant cap: $0.001 < $2.00 — OK'],
+  [2700, 'll-blank',  ''],
+  [2710, 'll-action', '✓ Signing EIP-3009 authorization…'],
+  [2900, 'll-dim',    '   from:  0x4f3a…d291'],
+  [3000, 'll-dim',    '   to:    0x9b2c…8f41'],
+  [3100, 'll-dim',    '   value: 1000 (0.001 USDC, 6 decimals)'],
+  [3200, 'll-dim',    '   nonce: 0x7a3f… | validBefore: 1743916800'],
+  [3400, 'll-blank',  ''],
+  [3410, 'll-req',    '→ GET https://api.firecrawl.dev/v1/scrape'],
+  [3510, 'll-dim',    '   X-Payment: eip3009:0x9b2c…[sig]'],
+  [4200, 'll-blank',  ''],
+  [4210, 'll-res-ok', '← HTTP 200 OK  ✅  Scrape complete. 0.8s total.'],
+];
+
+function runScene2() {
+  setSceneState(2, 'running');
+  hideEl('s2logEmpty');
+  document.getElementById('s2cursor').style.display = 'inline-block';
+  document.getElementById('s2dot').className = 'status-dot active';
+  document.getElementById('s2status').textContent = 'Running…';
+
+  S2_LOG.forEach(([ms, cls, text]) => {
+    delay(() => appendLog('s2logLines', cls, text), ms);
+  });
+
+  // receipt + notify
+  delay(() => {
+    document.getElementById('s2cursor').style.display = 'none';
+    showEl('s2txWrap');
+    document.getElementById('s2balance').textContent = '$49.999 USDC';
+    document.getElementById('s2dot').className = 'status-dot done';
+    document.getElementById('s2status').textContent = 'Done';
+  }, 4800);
+
+  // merchant side activates
+  delay(() => {
+    hideEl('s2merchantIdle');
+    showEl('s2incomingCard');
+  }, 5200);
+
+  delay(() => {
+    showEl('s2verifyCard');
+    const checks = [
+      ['s2c1','s2ci1','s2cm1','0x4f3a…d291 on Base'],
+      ['s2c2','s2ci2','s2cm2','NFT #1024 · operator KYB verified'],
+      ['s2c3','s2ci3','s2cm3','94 / 100  · 847 txns'],
+      ['s2c4','s2ci4','s2cm4','Normal — no anomalies'],
+      ['s2c5','s2ci5','s2cm5','$49.999 USDC ≥ $0.001 required'],
+      ['s2c6','s2ci6','s2cm6','Clear — OFAC + internal list'],
+    ];
+    checks.forEach(([c,ci,cm,meta], i) => {
+      delay(() => {
+        const el = document.getElementById(c);
+        el.classList.add('visible','ok');
+        document.getElementById(ci).className = 'check-icon ok';
+        document.getElementById(ci).textContent = '✓';
+        document.getElementById(cm).textContent = meta;
+      }, i * 500);
+    });
+  }, 5600);
+
+  delay(() => document.getElementById('s2verifyResult').classList.add('visible'), 8800);
+
+  delay(() => {
+    showEl('s2crmCard');
+    requestAnimationFrame(() => document.getElementById('s2crmCard').classList.add('visible'));
+  }, 9400);
+
+  delay(() => {
+    showEl('s2notify');
+    requestAnimationFrame(() => document.getElementById('s2notify').classList.add('visible'));
+    document.getElementById('s2summary').classList.add('visible');
+    setSceneState(2, 'done');
+  }, 10200);
+}
+
+function resetScene2() {
+  clearTimers();
+  setSceneState(2, 'idle');
+  document.getElementById('stab2').classList.remove('done');
+  document.getElementById('tnum2').textContent = '2';
+  document.getElementById('s2logEmpty').style.display = '';
+  document.getElementById('s2logLines').innerHTML = '';
+  document.getElementById('s2cursor').style.display = 'none';
+  document.getElementById('s2dot').className = 'status-dot idle';
+  document.getElementById('s2status').textContent = 'Idle';
+  document.getElementById('s2balance').textContent = '$50.000 USDC';
+  hideEl('s2txWrap'); hideEl('s2notify');
+  document.getElementById('s2notify').classList.remove('visible');
+  document.getElementById('s2summary').classList.remove('visible');
+  showEl('s2merchantIdle');
+  hideEl('s2incomingCard'); hideEl('s2verifyCard'); hideEl('s2crmCard');
+  document.getElementById('s2crmCard').classList.remove('visible');
+  document.getElementById('s2verifyResult').classList.remove('visible');
+  for (let i=1;i<=6;i++) {
+    const c = document.getElementById('s2c'+i);
+    if(c){ c.classList.remove('visible','ok'); }
+    const ci = document.getElementById('s2ci'+i);
+    if(ci){ ci.className='check-icon'; ci.textContent='·'; }
+    const cm = document.getElementById('s2cm'+i);
+    if(cm) cm.textContent='';
+  }
+  updateRunBtn();
+}
+
+// ── SCENE 3 ──────────────────────────────────────────
+const S3_LOG = [
+  [0,    'll-action', '→ Task: "Analyze AI agent payments market — Q1 2026"'],
+  [700,  'll-blank',  ''],
+  [710,  'll-req',    '→ GET https://api.datastream.io/v1/datasets/ai-payments-q1-2026'],
+  [810,  'll-dim',    '   User-Agent: mcp://research-agent.analysis.acme.v1.0'],
+  [1400, 'll-blank',  ''],
+  [1410, 'll-res-err','← HTTP 402 Payment Required'],
+  [1510, 'll-dim',    '   X-Payment-Required: USDC 0.05 on Base'],
+  [1610, 'll-dim',    '   X-Dataset: AI-Payments-Market-Q1-2026'],
+  [1710, 'll-dim',    '   X-License: single-agent-use, no-redistribution'],
+  [1900, 'll-blank',  ''],
+  [1910, 'll-action', '⚡ Pooly intercepting…'],
+  [2200, 'll-check',  '✓ Spend: $0.05 within daily limit — OK'],
+  [2500, 'll-check',  '✓ Merchant: DataStream API (rep: 96/100) — OK'],
+  [2800, 'll-check',  '✓ License: single-agent-use — auto-accepted'],
+  [3100, 'll-check',  '✓ EIP-3009 signed — $0.05 USDC authorized'],
+  [3400, 'll-blank',  ''],
+  [3410, 'll-req',    '→ GET https://api.datastream.io/v1/datasets/ai-payments-q1-2026'],
+  [3510, 'll-dim',    '   X-Payment: eip3009:0x7c9f…[sig]'],
+  [4000, 'll-res-ok', '← HTTP 200 OK — dataset received (2.1 KB JSON)'],
+  [4300, 'll-blank',  ''],
+  [4310, 'll-action', '→ Agent processing 847 data points…'],
+  [5200, 'll-action', '→ Generating research summary…'],
+  [6000, 'll-check',  '✅ Research complete  ·  $0.05 USDC (TXN-8843)  ·  6.5s'],
+];
+
+const FINDING_TEXT = 'AI agent payment market: <strong>$2.4B</strong>, growing <strong>340% YoY</strong>. x402 leads protocol adoption at 67% share. Average micropayment size: <strong>$0.003</strong>. Top use cases: API access (44%), data purchase (31%), compute (25%). Market projected to reach $18B by 2028.';
+
+function runScene3() {
+  setSceneState(3, 'running');
+  hideEl('s3logEmpty');
+  document.getElementById('s3cursor').style.display = 'inline-block';
+
+  S3_LOG.forEach(([ms, cls, text]) => {
+    delay(() => appendLog('s3logLines', cls, text), ms);
+  });
+
+  // data panel
+  delay(() => {
+    hideEl('s3idle');
+    showEl('s3dataCard');
+    document.getElementById('s3json').classList.add('visible');
+  }, 4200);
+
+  // tx card
+  delay(() => { showEl('s3txCard'); }, 4600);
+
+  // finding
+  delay(() => {
+    document.getElementById('s3cursor').style.display = 'none';
+    const fb = document.getElementById('s3finding');
+    fb.style.display = '';
+    fb.classList.add('visible');
+    showEl('s3findingText');
+    const target = FINDING_TEXT;
+    document.getElementById('s3findingText').innerHTML = target;
+  }, 6400);
+
+  delay(() => {
+    document.getElementById('s3summary').classList.add('visible');
+    setSceneState(3, 'done');
+  }, 7200);
+}
+
+function resetScene3() {
+  clearTimers();
+  setSceneState(3, 'idle');
+  document.getElementById('stab3').classList.remove('done');
+  document.getElementById('tnum3').textContent = '3';
+  document.getElementById('s3logEmpty').style.display = '';
+  document.getElementById('s3logLines').innerHTML = '';
+  document.getElementById('s3cursor').style.display = 'none';
+  document.getElementById('s3summary').classList.remove('visible');
+  const fb = document.getElementById('s3finding');
+  fb.classList.remove('visible'); fb.style.display = 'none';
+  hideEl('s3dataCard'); hideEl('s3txCard');
+  document.getElementById('s3json').classList.remove('visible');
+  showEl('s3idle');
+  updateRunBtn();
+}
+
+// ── SCENE 4 ──────────────────────────────────────────
+function setState4(active, done) {
+  const ids = ['es_open','es_funded','es_accepted','es_executing','es_submitted','es_completed'];
+  ids.forEach((id,i) => {
+    const el = document.getElementById(id);
     if (!el) return;
-    el.className = 'step ' + state;
+    el.className = 'es-state';
+    if (i < done) el.classList.add('done');
+    else if (i === active) el.classList.add('active');
+  });
+}
+
+const S4_AGENT = [
+  [0,    'll-action', '→ Task: analyze image batch (400 images)'],
+  [600,  'll-action', '→ GPU required — querying provider network…'],
+  [1200, 'll-req',    '→ POST /v1/escrow'],
+  [1300, 'll-dim',    '   task: image-batch-analysis'],
+  [1400, 'll-dim',    '   budget: 10.00 USDC · evaluator: pooly-zk-v2'],
+];
+const S4_ESCROW = [
+  [2000, 'll-action', '⚡ ERC-8183 contract deployed on Base'],
+  [2100, 'll-dim',    '   Job ID:     JOB-2241'],
+  [2200, 'll-dim',    '   Escrow:     0xb3c4…9812'],
+  [2300, 'll-check',  '   10.000 USDC locked in smart contract'],
+  [2500, 'll-action', '→ Job broadcast to provider network (12 notified)'],
+  [2700, 'll-check',  '← Bids received: 3'],
+  [3100, 'll-check',  '← Selected: VisionProvider-3 (rep: 97/100) · bid: 9.50 USDC'],
+];
+const S4_PROVIDER = [
+  [3600, 'll-action', '⚡ Job accepted: JOB-2241'],
+  [3800, 'll-action', '→ Executing: analyzing 400 images…'],
+  [4200, 'll-info',   '   [████░░░░░░] 40%…'],
+  [4700, 'll-info',   '   [███████░░░] 70%…'],
+  [5200, 'll-info',   '   [██████████] 100% — 3.18s'],
+  [5600, 'll-req',    '→ Submitting proof to escrow'],
+  [5800, 'll-dim',    '   Result Hash: QmX7f8…b3a9 (IPFS CID)'],
+];
+const S4_ESCROW2 = [
+  [6200, 'll-action', '→ Evaluator validating proof hash…'],
+  [6600, 'll-check',  '✅ ZK Verification: PASS — result authentic'],
+  [7000, 'll-action', '→ Releasing escrow…'],
+  [7200, 'll-check',  '← 9.500 USDC → VisionProvider-3'],
+  [7400, 'll-check',  '← 0.500 USDC → Pooly fee'],
+];
+
+function runScene4() {
+  setSceneState(4, 'running');
+  hideEl('s4agentLogEmpty');
+  hideEl('s4escrowLogEmpty');
+  hideEl('s4providerLogEmpty');
+  setState4(0, 0);
+
+  S4_AGENT.forEach(([ms, cls, text]) => delay(() => appendLog('s4agentLogLines', cls, text), ms));
+  delay(() => setState4(1, 1), 1800);
+
+  S4_ESCROW.forEach(([ms, cls, text]) => delay(() => appendLog('s4escrowLogLines', cls, text), ms));
+  delay(() => setState4(2, 2), 3000);
+  delay(() => setState4(3, 3), 3600);
+
+  S4_PROVIDER.forEach(([ms, cls, text]) => delay(() => appendLog('s4providerLogLines', cls, text), ms));
+  delay(() => setState4(4, 4), 5700);
+
+  S4_ESCROW2.forEach(([ms, cls, text]) => delay(() => appendLog('s4escrowLogLines', cls, text), ms));
+  delay(() => setState4(5, 5), 7200);
+  delay(() => setState4(5, 6), 7800);
+
+  delay(() => {
+    appendLog('s4agentLogLines', 'll-check', '← Result received: QmX7f8…b3a9');
+    appendLog('s4agentLogLines', 'll-dim',   '   objects_detected: 12,480');
+    appendLog('s4agentLogLines', 'll-dim',   '   avg_confidence:   94.2%');
+    appendLog('s4agentLogLines', 'll-dim',   '   anomalies:        7');
+    showEl('s4payoutCard');
+  }, 8200);
+
+  delay(() => {
+    showEl('s4agentResult');
+    document.getElementById('s4summary').classList.add('visible');
+    setSceneState(4, 'done');
+  }, 9000);
+}
+
+function resetScene4() {
+  clearTimers();
+  setSceneState(4, 'idle');
+  document.getElementById('stab4').classList.remove('done');
+  document.getElementById('tnum4').textContent = '4';
+  ['s4agentLogEmpty','s4escrowLogEmpty','s4providerLogEmpty'].forEach(showEl);
+  ['s4agentLogLines','s4escrowLogLines','s4providerLogLines'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = '';
+  });
+  hideEl('s4payoutCard'); hideEl('s4agentResult');
+  document.getElementById('s4summary').classList.remove('visible');
+  setState4(-1, 0);
+  updateRunBtn();
+}
+
+// ── SCENE 5 ──────────────────────────────────────────
+function runScene5() {
+  setSceneState(5, 'running');
+  const checks = [
+    ['s5c1','s5ci1','s5cm1','mcp://…acme.v1.0 → 0x4f3a…d291 on Base'],
+    ['s5c2','s5ci2','s5cm2','NFT #1024 · operator: acme.com (KYB ✓)'],
+    ['s5c3','s5ci3','s5cm3','94 / 100  ·  847 txns  ·  98.6% success'],
+    ['s5c4','s5ci4','s5cm4','Normal  ·  no anomalies detected'],
+    ['s5c5','s5ci5','s5cm5','$49.999 USDC ≥ $0.001 required'],
+    ['s5c6','s5ci6','s5cm6','Clear — OFAC + Pooly global blacklist'],
+  ];
+  checks.forEach(([c,ci,cm,meta], i) => {
+    delay(() => {
+      const el = document.getElementById(c);
+      el.classList.add('visible','ok');
+      document.getElementById(ci).className = 'check-icon ok';
+      document.getElementById(ci).textContent = '✓';
+      document.getElementById(cm).textContent = meta;
+    }, 600 + i * 550);
+  });
+
+  delay(() => document.getElementById('s5verifyResult').classList.add('visible'), 4000);
+
+  delay(() => { showEl('s5settlementCard'); hideEl('s5idle'); }, 4600);
+
+  delay(() => {
+    showEl('s5crm');
+    requestAnimationFrame(() => document.getElementById('s5crm').classList.add('visible'));
+  }, 5400);
+
+  delay(() => {
+    showEl('s5erp');
+    requestAnimationFrame(() => document.getElementById('s5erp').classList.add('visible'));
+  }, 6600);
+
+  delay(() => {
+    showEl('s5webhook');
+    requestAnimationFrame(() => document.getElementById('s5webhook').classList.add('visible'));
+  }, 7800);
+
+  delay(() => {
+    document.getElementById('s5summary').classList.add('visible');
+    document.getElementById('ctaBar').classList.add('visible');
+    setSceneState(5, 'done');
+  }, 9000);
+}
+
+function resetScene5() {
+  clearTimers();
+  setSceneState(5, 'idle');
+  document.getElementById('stab5').classList.remove('done');
+  document.getElementById('tnum5').textContent = '5';
+  for (let i=1;i<=6;i++) {
+    const c = document.getElementById('s5c'+i);
+    if(c){ c.classList.remove('visible','ok'); }
+    const ci = document.getElementById('s5ci'+i);
+    if(ci){ ci.className='check-icon'; ci.textContent='·'; }
+    const cm = document.getElementById('s5cm'+i);
+    if(cm) cm.textContent='';
   }
+  document.getElementById('s5verifyResult').classList.remove('visible');
+  hideEl('s5settlementCard');
+  showEl('s5idle');
+  ['s5crm','s5erp','s5webhook'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('visible'); el.style.display = 'none'; }
+  });
+  document.getElementById('s5summary').classList.remove('visible');
+  document.getElementById('ctaBar').classList.remove('visible');
+  updateRunBtn();
+}
 
-  function runDemo() {
-    if (running) return;
-    running = true;
+// ── Reset dispatch ────────────────────────────────────
+function resetScene(n) {
+  clearTimers();
+  if (n === 1) resetScene1();
+  else if (n === 2) resetScene2();
+  else if (n === 3) resetScene3();
+  else if (n === 4) resetScene4();
+  else if (n === 5) resetScene5();
+}
 
-    document.getElementById('runBtn').disabled = true;
-    document.getElementById('resetBtn').style.display = 'flex';
-
-    // Step 1 active
-    setStep(1, 'active');
-
-    const dot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    dot.className = 'status-dot active';
-    statusText.textContent = 'Running task…';
-    document.getElementById('walletStatus').textContent = 'Executing: GET /v1/scrape on Firecrawl…';
-
-    // Show log cursor
-    document.getElementById('logEmpty').style.display = 'none';
-    document.getElementById('logCursor').style.display = 'inline-block';
-
-    // Schedule log lines
-    LOG_SEQUENCE.forEach(([delay, cls, text], i) => {
-      setTimeout(() => {
-        if (cls === 'blank') {
-          addLogLine('blank', '');
-          return;
-        }
-        addLogLine(cls, text);
-
-        // Step transitions
-        if (text.includes('HTTP 402')) {
-          setStep(1, 'done'); setStep(2, 'active');
-        }
-        if (text.includes('Pooly intercepting')) {
-          setStep(2, 'done'); setStep(3, 'active');
-        }
-        if (text.includes('HTTP 200')) {
-          setStep(3, 'done'); setStep(4, 'active');
-          setTimeout(() => showTransaction(), 500);
-          setTimeout(() => startMerchantFlow(), 1200);
-        }
-      }, delay);
-    });
-  }
-
-  function addLogLine(cls, text) {
-    const container = document.getElementById('logLines');
-    const line = document.createElement('div');
-    line.className = 'log-line ' + cls;
-    line.textContent = text;
-    container.appendChild(line);
-    // Force reflow for transition
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { line.classList.add('visible'); });
-    });
-    // Scroll terminal
-    const term = document.getElementById('logTerminal');
-    term.scrollTop = term.scrollHeight;
-  }
-
-  function showTransaction() {
-    document.getElementById('logCursor').style.display = 'none';
-    const wrap = document.getElementById('txCardWrap');
-    wrap.style.display = 'block';
-    setStep(4, 'done');
-
-    // Update wallet balance
-    document.getElementById('balance').textContent = '$12.399 USDC';
-    const dot = document.getElementById('statusDot');
-    dot.className = 'status-dot done';
-    document.getElementById('statusText').textContent = 'Task complete';
-    document.getElementById('walletStatus').textContent = 'Payment settled — TXN-8842';
-
-    // Show developer notification — you were never asked
-    setTimeout(() => {
-      const notify = document.getElementById('devNotifyCard');
-      notify.style.display = 'block';
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => { notify.classList.add('visible'); });
-      });
-    }, 800);
-  }
-
-  function startMerchantFlow() {
-    setStep(5, 'active');
-
-    // On mobile: signal tab and auto-switch after brief delay
-    const tabM = document.getElementById('tabMerchant');
-    tabM.classList.add('merchant-ready');
-    if (isMobile()) {
-      setTimeout(() => switchTab('merchant'), 400);
-    }
-
-    // Show merchant incoming request
-    document.getElementById('merchantIdle').style.display = 'none';
-    const incoming = document.getElementById('incomingCard');
-    incoming.style.display = 'block';
-
-    setTimeout(() => {
-      // Show verification card
-      const vc = document.getElementById('verifyCard');
-      vc.style.display = 'block';
-
-      CHECKS.forEach(([delay, icon, meta], i) => {
-        setTimeout(() => {
-          const item = document.getElementById('c' + (i+1));
-          const iconEl = document.getElementById('ci' + (i+1));
-          const metaEl = document.getElementById('cm' + (i+1));
-          item.classList.add('visible', 'ok');
-          iconEl.className = 'check-icon ok';
-          iconEl.textContent = icon;
-          metaEl.textContent = meta;
-
-          if (i === 4) {
-            // All checks done
-            document.getElementById('tabMerchant').classList.remove('merchant-ready');
-            document.getElementById('tabMerchant').classList.add('merchant-done');
-            setStep(5, 'done'); setStep(6, 'active');
-            setTimeout(() => {
-              document.getElementById('verifyResult').style.display = 'block';
-              setTimeout(() => showCRM(), 600);
-            }, 300);
-          }
-        }, delay);
-      });
-    }, 600);
-  }
-
-  function showCRM() {
-    const crm = document.getElementById('crmCard');
-    crm.style.display = 'block';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { crm.classList.add('visible'); });
-    });
-    setStep(6, 'done');
-    setTimeout(() => {
-      document.getElementById('summaryBar').classList.add('visible');
-      setTimeout(() => {
-        document.getElementById('ctaBar').classList.add('visible');
-      }, 400);
-    }, 600);
-  }
-
-  function copyDemoLink() {
-    const url = window.location.href.split('?')[0];
+// ── Copy link ─────────────────────────────────────────
+function copyDemoLink() {
+  const url = window.location.href.split('?')[0];
+  const hint = document.getElementById('copiedHint');
+  if (navigator.clipboard) {
     navigator.clipboard.writeText(url).then(() => {
-      const hint = document.getElementById('copiedHint');
-      hint.classList.add('show');
-      setTimeout(() => hint.classList.remove('show'), 2500);
-    }).catch(() => {
-      // Fallback for browsers without clipboard API
-      const ta = document.createElement('textarea');
-      ta.value = url;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      const hint = document.getElementById('copiedHint');
       hint.classList.add('show');
       setTimeout(() => hint.classList.remove('show'), 2500);
     });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 2500); } catch(e) {}
+    document.body.removeChild(ta);
   }
+}
 
-  function resetDemo() {
-    running = false;
-    document.getElementById('runBtn').disabled = false;
-    document.getElementById('resetBtn').style.display = 'none';
-
-    // Reset tabs
-    switchTab('agent');
-    const tabM = document.getElementById('tabMerchant');
-    tabM.classList.remove('merchant-ready', 'merchant-done');
-
-    // Reset steps
-    for (let i = 1; i <= 6; i++) setStep(i, '');
-
-    // Reset wallet
-    document.getElementById('balance').textContent = '$12.400 USDC';
-    document.getElementById('statusDot').className = 'status-dot idle';
-    document.getElementById('statusText').textContent = 'Idle';
-    document.getElementById('walletStatus').textContent = 'Waiting for task…';
-
-    // Reset log
-    document.getElementById('logLines').innerHTML = '';
-    document.getElementById('logEmpty').style.display = 'block';
-    document.getElementById('logCursor').style.display = 'none';
-
-    // Reset tx card + dev notification
-    document.getElementById('txCardWrap').style.display = 'none';
-    const notify = document.getElementById('devNotifyCard');
-    notify.style.display = 'none';
-    notify.classList.remove('visible');
-
-    // Reset merchant
-    document.getElementById('merchantIdle').style.display = 'flex';
-    document.getElementById('incomingCard').style.display = 'none';
-    document.getElementById('verifyCard').style.display = 'none';
-    document.getElementById('crmCard').style.display = 'none';
-    document.getElementById('crmCard').classList.remove('visible');
-    document.getElementById('verifyResult').style.display = 'none';
-
-    // Reset checklist items
-    for (let i = 1; i <= 5; i++) {
-      const item = document.getElementById('c' + i);
-      item.classList.remove('visible', 'ok');
-      document.getElementById('ci' + i).className = 'check-icon';
-      document.getElementById('ci' + i).textContent = '·';
-      document.getElementById('cm' + i).textContent = '';
-    }
-
-    // Reset summary + CTA
-    document.getElementById('summaryBar').classList.remove('visible');
-    document.getElementById('ctaBar').classList.remove('visible');
-    document.getElementById('copiedHint').classList.remove('show');
-  }
+// ── Init ─────────────────────────────────────────────
+updateRunBtn();
 </script>
 </body>
 </html>
